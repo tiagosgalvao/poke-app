@@ -11,14 +11,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-final class PokeApiFixtures {
+public final class PokeApiFixtures {
 
 	private static final String FIXTURE_FOLDER = "/pokeapi/";
 
 	private PokeApiFixtures() {
 	}
 
-	static String fixture(String name) throws IOException {
+	public static String fixture(String name) throws IOException {
 		try (var in = PokeApiFixtures.class.getResourceAsStream(FIXTURE_FOLDER + name)) {
 			if (in == null) {
 				throw new FileNotFoundException("missing fixture " + name);
@@ -27,11 +27,11 @@ final class PokeApiFixtures {
 		}
 	}
 
-	static void stubFixture(WireMockExtension pokeApi, String url, String fixture) throws IOException {
+	public static void stubFixture(WireMockExtension pokeApi, String url, String fixture) throws IOException {
 		pokeApi.stubFor(get(urlEqualTo(url)).willReturn(okJson(fixture(fixture))));
 	}
 
-	static void stubSlowFixture(WireMockExtension pokeApi, String url, String fixture, Duration delay) throws IOException {
+	public static void stubSlowFixture(WireMockExtension pokeApi, String url, String fixture, Duration delay) throws IOException {
 		pokeApi.stubFor(get(urlEqualTo(url)).willReturn(okJson(fixture(fixture)).withFixedDelay((int) delay.toMillis())));
 	}
 }

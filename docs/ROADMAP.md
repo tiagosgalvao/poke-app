@@ -50,7 +50,7 @@ All Phase 3 code lives in `com.poke.identity`.
 
 ## Phase 4: Backend hardening and packaging
 
-- [ ] **4.1 end-to-end tests**: `@SpringBootTest` with Testcontainers (Postgres, Redis) and WireMock: register → login → sync → update → error paths
+- [x] **4.1 end-to-end tests**: `PokeAppEndToEndTest`, a `@SpringBootTest` through the real security chain with Testcontainers (Postgres, Redis) and WireMock: register → login → 401 without a token → import → 409 duplicate → patch → 409 stale version → 400 `fieldErrors` → sync (refreshed and failed) → delete → 404
 - [ ] **4.2 coverage review**: review the JaCoCo report and fill gaps in domain and services
 - [ ] **4.3 api dockerfile**: multi-stage, non-root, layered jar, healthcheck
 - [ ] **4.4 api in compose**: an `api` service that depends on healthy postgres and redis
