@@ -57,7 +57,7 @@ All Phase 3 code lives in `com.poke.identity`.
 
 ## Phase 5: Frontend
 
-- [ ] **5.1 web api client**: base fetch, ProblemDetail parsing, bearer header, 401 → logout
+- [x] **5.1 web api client**: `apiRequest` (bearer header, JSON, 204, network errors), ProblemDetail → typed `ApiError` with `fieldErrors`, a 401 callback for logout, typed API models, and MSW test setup
 - [ ] **5.2 web auth**: Zustand store, login and register pages (RHF + zod), `<RequireAuth>`, header user menu
 - [ ] **5.3 catalog page**: US01 responsive grid, pagination in the URL, skeletons, error state
 - [ ] **5.4 detail page**: US02 artwork, stat bars, description, clickable evolution chain
