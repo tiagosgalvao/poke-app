@@ -16,7 +16,7 @@ docker compose up -d postgres redis   # from the repo root
 ./gradlew test --tests '*ArchitectureTest'
 ```
 
-The coverage report is written to `build/reports/jacoco/test/html/index.html`.
+The coverage report is written to `build/reports/jacoco/test/html/index.html`. `./gradlew build` also enforces a minimum of 95% line and 90% branch coverage.
 
 ## Configuration
 

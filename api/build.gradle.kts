@@ -68,3 +68,28 @@ tasks.jacocoTestReport {
 		html.required = true
 	}
 }
+
+val coverageExclusions = listOf("com/poke/PokeApiApplication.class")
+val minimumLineCoverage = "0.95".toBigDecimal()
+val minimumBranchCoverage = "0.90".toBigDecimal()
+
+tasks.jacocoTestCoverageVerification {
+	dependsOn(tasks.test)
+	classDirectories.setFrom(files(classDirectories.files.map { fileTree(it) { exclude(coverageExclusions) } }))
+	violationRules {
+		rule {
+			limit {
+				counter = "LINE"
+				minimum = minimumLineCoverage
+			}
+			limit {
+				counter = "BRANCH"
+				minimum = minimumBranchCoverage
+			}
+		}
+	}
+}
+
+tasks.check {
+	dependsOn(tasks.jacocoTestCoverageVerification)
+}

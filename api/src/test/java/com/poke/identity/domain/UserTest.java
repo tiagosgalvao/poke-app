@@ -45,6 +45,12 @@ class UserTest {
 	}
 
 	@Test
+	void rejectsMissingUsernameOrEmail() {
+		assertThatThrownBy(() -> User.register(null, "a@b.c", "hash", NOW)).isInstanceOf(DomainValidationException.class);
+		assertThatThrownBy(() -> User.register("ash", null, "hash", NOW)).isInstanceOf(DomainValidationException.class);
+	}
+
+	@Test
 	void requiresAPasswordHash() {
 		assertThatThrownBy(() -> User.register("ash", "ash@pallet.town", " ", NOW)).isInstanceOf(DomainValidationException.class);
 	}

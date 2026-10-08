@@ -333,7 +333,7 @@ TDD workflow: write a failing test, make it pass, then refactor. Commit history 
 | Architecture | ArchUnit | Dependency rule and feature isolation ([§4](#4-backend-architecture-feature-first-clean-architecture)) |
 | Web | Vitest + Testing Library + MSW | Catalog renders and paginates, login flow, edit form validation and server errors |
 
-Coverage comes from JaCoCo, with a reporting target of ≥ 80% on `domain` and `service`.
+Coverage comes from JaCoCo. `./gradlew build` runs `jacocoTestCoverageVerification`, which fails the build below **95% line / 90% branch** coverage (excluding the `main` class). It currently sits at about 99% line / 97% branch.
 
 ## 11. Runtime topology
 

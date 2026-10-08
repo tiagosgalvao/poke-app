@@ -227,6 +227,14 @@ class LocalPokemonControllerTest {
 	}
 
 	@Test
+	void aSyncRequestNeedsIdsOrARange() throws Exception {
+		mvc.perform(post(LOCAL_POKEMON + "/sync").contentType(APPLICATION_JSON).content("{\"fromId\":1}").with(jwt()))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.detail").value("provide either ids or both fromId and toId"));
+		verifyNoInteractions(localPokemonService);
+	}
+
+	@Test
 	void rejectsAnOversizedSyncBatch() throws Exception {
 		mvc.perform(post(LOCAL_POKEMON + "/sync").contentType(APPLICATION_JSON).content("{\"fromId\":1,\"toId\":500}").with(jwt()))
 				.andExpect(status().isBadRequest());
