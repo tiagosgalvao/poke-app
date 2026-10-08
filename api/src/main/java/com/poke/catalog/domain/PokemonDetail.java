@@ -7,6 +7,7 @@ import java.util.List;
 public record PokemonDetail(
 		int id,
 		String name,
+		String spriteUrl,
 		String imageUrl,
 		String category,
 		int weightHectograms,

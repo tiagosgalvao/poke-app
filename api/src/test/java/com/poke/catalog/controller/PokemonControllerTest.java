@@ -88,7 +88,7 @@ class PokemonControllerTest {
 
 	@Test
 	void detailReturnsStatsDescriptionAndEvolution() throws Exception {
-		var pikachu = new PokemonDetail(25, "pikachu", "https://img/art/25.png", "Mouse Pokemon", 60, 4,
+		var pikachu = new PokemonDetail(25, "pikachu", "https://img/25.png", "https://img/art/25.png", "Mouse Pokemon", 60, 4,
 				List.of("electric"), List.of(new Ability("static", false)), List.of(new Stat("speed", 90)),
 				"Possesses cheek sacs.",
 				List.of(new EvolutionStage(0, 172, "pichu", null, null, "https://img/172.png"),
@@ -97,6 +97,7 @@ class PokemonControllerTest {
 
 		mvc.perform(get("/api/v1/pokemon/pikachu"))
 				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.spriteUrl").value("https://img/25.png"))
 				.andExpect(jsonPath("$.imageUrl").value("https://img/art/25.png"))
 				.andExpect(jsonPath("$.stats[0].name").value("speed"))
 				.andExpect(jsonPath("$.stats[0].value").value(90))

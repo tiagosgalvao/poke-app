@@ -69,6 +69,7 @@ final class PokemonResponses {
 	record PokemonDetailResponse(
 			int id,
 			String name,
+			String spriteUrl,
 			String imageUrl,
 			String category,
 			double weightKg,
@@ -83,6 +84,7 @@ final class PokemonResponses {
 			return new PokemonDetailResponse(
 					pokemon.id(),
 					pokemon.name(),
+					pokemon.spriteUrl(),
 					pokemon.imageUrl(),
 					pokemon.category(),
 					kilograms(pokemon.weightHectograms()),

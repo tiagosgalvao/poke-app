@@ -108,6 +108,7 @@ class PokeApiPokemonCatalogTest {
 
 		var detail = catalog.findDetail("pikachu").orElseThrow();
 
+		assertThat(detail.spriteUrl()).endsWith("/sprites/pokemon/25.png");
 		assertThat(detail.imageUrl()).endsWith("/official-artwork/25.png");
 		assertThat(detail.stats()).hasSize(6).contains(new Stat("hp", 35), new Stat("speed", 90));
 		assertThat(detail.description()).startsWith("Possesses cheek sacs");

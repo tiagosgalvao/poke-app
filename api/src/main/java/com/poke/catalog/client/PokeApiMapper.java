@@ -37,6 +37,7 @@ final class PokeApiMapper {
 		return new PokemonDetail(
 				pokemon.id(),
 				pokemon.name(),
+				sprite(pokemon),
 				artwork(pokemon).orElseGet(() -> sprite(pokemon)),
 				category,
 				pokemon.weight(),

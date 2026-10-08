@@ -92,6 +92,6 @@ class CatalogServiceTest {
 	}
 
 	private static PokemonDetail detail(int id) {
-		return new PokemonDetail(id, "pikachu", null, null, 60, 4, null, null, null, null, null);
+		return new PokemonDetail(id, "pikachu", null, null, null, 60, 4, null, null, null, null, null);
 	}
 }

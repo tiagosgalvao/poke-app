@@ -12,7 +12,7 @@ class PokemonDetailTest {
 
 	@Test
 	void buildsAValidDetail() {
-		var detail = new PokemonDetail(25, "pikachu", "https://img/art/25.png", "Mouse Pokemon", 60, 4,
+		var detail = new PokemonDetail(25, "pikachu", "https://img/25.png", "https://img/art/25.png", "Mouse Pokemon", 60, 4,
 				List.of("electric"), List.of(new Ability("static", false)), List.of(new Stat("speed", 90)),
 				"Possesses cheek sacs.", List.of(new EvolutionStage(0, 172, "pichu", null, null, null)));
 
@@ -23,7 +23,7 @@ class PokemonDetailTest {
 
 	@Test
 	void nullListsBecomeEmpty() {
-		var detail = new PokemonDetail(25, "pikachu", null, null, 60, 4, null, null, null, null, null);
+		var detail = new PokemonDetail(25, "pikachu", null, null, null, 60, 4, null, null, null, null, null);
 
 		assertThat(detail.types()).isEmpty();
 		assertThat(detail.abilities()).isEmpty();
@@ -33,7 +33,7 @@ class PokemonDetailTest {
 
 	@Test
 	void rejectsInvalidIdentity() {
-		assertThatThrownBy(() -> new PokemonDetail(-5, "x", null, null, 1, 1, null, null, null, null, null))
+		assertThatThrownBy(() -> new PokemonDetail(-5, "x", null, null, null, 1, 1, null, null, null, null, null))
 				.isInstanceOf(DomainValidationException.class);
 	}
 }

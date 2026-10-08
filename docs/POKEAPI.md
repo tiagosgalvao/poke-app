@@ -187,7 +187,7 @@ We flatten it with a breadth-first walk, so stages come out in stage order:
 | Our field | US | Source |
 |---|---|---|
 | `id`, `name` | 01, 02 | `pokemon.id`, `pokemon.name` |
-| `spriteUrl` | 01 | `pokemon.sprites.front_default` |
+| `spriteUrl` | 01, 02 | `pokemon.sprites.front_default` (also copied into the local Pokedex) |
 | `imageUrl` | 02 | `pokemon.sprites.other.official-artwork.front_default`, falling back to `front_default` |
 | `category` | 01, 02 | `species.genera[en].genus` |
 | `weightKg`, `heightM` | 01, 02 | `pokemon.weight` (hg) ÷ 10, `pokemon.height` (dm) ÷ 10. The domain keeps the raw units (`weightHectograms`, `heightDecimetres`), and `PokemonResponses` in the controller layer converts them. |
