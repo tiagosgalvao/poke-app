@@ -56,6 +56,14 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
+tasks.jar {
+	enabled = false
+}
+
+tasks.bootJar {
+	archiveFileName = "poke-api.jar"
+}
+
 tasks.withType<Test> {
 	useJUnitPlatform()
 	finalizedBy(tasks.jacocoTestReport)

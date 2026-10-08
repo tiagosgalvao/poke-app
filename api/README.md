@@ -18,6 +18,16 @@ docker compose up -d postgres redis   # from the repo root
 
 The coverage report is written to `build/reports/jacoco/test/html/index.html`. `./gradlew build` also enforces a minimum of 95% line and 90% branch coverage.
 
+## Docker image
+
+```bash
+docker build -t poke-app-api .        # from api/
+```
+
+- **Build stage:** `eclipse-temurin:25-jdk` builds `poke-api.jar`, with a BuildKit cache mount for `~/.gradle`, then extracts Spring Boot's layers (dependencies, loader, snapshot dependencies, application). Code changes then only rebuild the small top layer.
+- **Run stage:** `eclipse-temurin:25-jre`, running as the non-root user `poke`, with `JarLauncher`.
+- **Healthcheck:** calls `/actuator/health` through bash's `/dev/tcp`, so no curl or wget is needed in the image.
+
 ## Configuration
 
 Every setting comes from an environment variable, with a local default in `src/main/resources/application.yml`:
