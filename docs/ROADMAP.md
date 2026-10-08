@@ -58,7 +58,7 @@ All Phase 3 code lives in `com.poke.identity`.
 ## Phase 5: Frontend
 
 - [x] **5.1 web api client**: `apiRequest` (bearer header, JSON, 204, network errors), ProblemDetail → typed `ApiError` with `fieldErrors`, a 401 callback for logout, typed API models, and MSW test setup
-- [ ] **5.2 web auth**: Zustand store, login and register pages (RHF + zod), `<RequireAuth>`, header user menu
+- [x] **5.2 web auth**: persisted Zustand session (expiry-aware) wired into the API client (401 → logout), login and register pages (RHF + zod mirroring the API rules, server errors inline, register logs straight in), `<RequireAuth>` with redirect back, and a header with navigation and the user menu
 - [ ] **5.3 catalog page**: US01 responsive grid, pagination in the URL, skeletons, error state
 - [ ] **5.4 detail page**: US02 artwork, stat bars, description, clickable evolution chain
 - [ ] **5.5 my pokedex page**: US03/US04 list, sync dialog, edit form (proprietary fields, tags), delete with in-page confirm, inline 400/409 errors
