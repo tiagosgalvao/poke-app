@@ -60,7 +60,8 @@ final class PokeApiMapper {
 		return orEmpty(species.flavorTextEntries()).stream()
 				.filter(entry -> isNamed(entry.language(), ENGLISH.code()))
 				.map(SpeciesDto.FlavorText::text)
-				.reduce((first, second) -> second);
+				.reduce((first, second) -> second)
+				.map(FlavorText::normalize);
 	}
 
 	private static String sprite(PokemonDto pokemon) {

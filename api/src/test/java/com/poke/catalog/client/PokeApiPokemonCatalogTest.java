@@ -82,6 +82,28 @@ class PokeApiPokemonCatalogTest {
 	}
 
 	@Test
+	void findDetailIncludesTheFlattenedEvolutionChain() throws IOException {
+		stubFixture(pokeApi, "/pokemon/133/", "pokemon-133.json");
+		stubFixture(pokeApi, "/pokemon-species/133/", "pokemon-species-133.json");
+		stubFixture(pokeApi, "/evolution-chain/67/", "evolution-chain-67.json");
+
+		var eevee = catalog.findDetail("133").orElseThrow();
+
+		assertThat(eevee.evolution()).hasSize(9);
+		assertThat(eevee.evolution().getFirst().name()).isEqualTo("eevee");
+		assertThat(eevee.description()).doesNotContain("\n", "\f");
+	}
+
+	@Test
+	void missingEvolutionChainLeavesTheEvolutionEmpty() throws IOException {
+		stubFixture(pokeApi, "/pokemon/25/", "pokemon-25.json");
+		stubFixture(pokeApi, "/pokemon-species/25/", "pokemon-species-25.json");
+		pokeApi.stubFor(get("/evolution-chain/10/").willReturn(aResponse().withStatus(404)));
+
+		assertThat(catalog.findDetail("25").orElseThrow().evolution()).isEmpty();
+	}
+
+	@Test
 	void findDetailFollowsTheSpeciesUrlForAlternateForms() throws IOException {
 		stubFixture(pokeApi, "/pokemon/10001/", "pokemon-10001.json");
 		stubFixture(pokeApi, "/pokemon-species/386/", "pokemon-species-386.json");

@@ -2,7 +2,9 @@ package com.poke.catalog.client;
 
 import com.poke.catalog.client.dto.NamedResource;
 import com.poke.catalog.client.dto.PokemonDto;
+import com.poke.catalog.client.dto.ResourceUrls;
 import com.poke.catalog.client.dto.SpeciesDto;
+import com.poke.catalog.domain.EvolutionStage;
 import com.poke.catalog.domain.PokemonCatalog;
 import com.poke.catalog.domain.PokemonDetail;
 import com.poke.catalog.domain.PokemonSummary;
@@ -50,7 +52,15 @@ public class PokeApiPokemonCatalog implements PokemonCatalog {
 				pokemon,
 				species.flatMap(PokeApiMapper::englishGenus).orElse(null),
 				species.flatMap(PokeApiMapper::latestEnglishFlavorText).orElse(null),
-				List.of());
+				species.map(this::evolutionOf).orElse(List.of()));
+	}
+
+	private List<EvolutionStage> evolutionOf(SpeciesDto species) {
+		return Optional.ofNullable(species.evolutionChain())
+				.map(chain -> ResourceUrls.idOf(chain.url()))
+				.flatMap(client::evolutionChain)
+				.map(chain -> EvolutionChainFlattener.flatten(chain.chain()))
+				.orElse(List.of());
 	}
 
 	// Always follows species.url: for alternate forms (id ≥ 10001) the species id differs.

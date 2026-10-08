@@ -1,5 +1,6 @@
 package com.poke.catalog.client;
 
+import com.poke.catalog.client.dto.EvolutionChainDto;
 import com.poke.catalog.client.dto.PokemonDto;
 import com.poke.catalog.client.dto.PokemonListDto;
 import com.poke.catalog.client.dto.SpeciesDto;
@@ -23,6 +24,7 @@ public class PokeApiClient {
 	private static final String POKEMON_LIST_URI = "/pokemon?offset={offset}&limit={limit}";
 	private static final String POKEMON_URI = "/pokemon/{key}/";
 	private static final String SPECIES_URI = "/pokemon-species/{id}/";
+	private static final String EVOLUTION_CHAIN_URI = "/evolution-chain/{id}/";
 
 	private final RestClient http;
 
@@ -55,6 +57,10 @@ public class PokeApiClient {
 
 	public Optional<SpeciesDto> species(int id) {
 		return fetch(SpeciesDto.class, SPECIES_URI, id);
+	}
+
+	public Optional<EvolutionChainDto> evolutionChain(int id) {
+		return fetch(EvolutionChainDto.class, EVOLUTION_CHAIN_URI, id);
 	}
 
 	private <T> Optional<T> fetch(Class<T> type, String uri, Object... variables) {
