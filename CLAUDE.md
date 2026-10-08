@@ -91,7 +91,7 @@ Packages are **feature-first** (`com.poke.<feature>`), with the usual Spring lay
   - Auth state lives in the Zustand store.
   - Forms use react-hook-form + zod, with schemas that mirror the API rules.
   - Style with Tailwind utility classes, mobile-first.
-  - The browser console must have no warnings: stable keys, labelled inputs, no act() warnings in tests.
+  - The browser console must have no warnings: stable keys, labelled inputs, no act() warnings in tests. The Vitest setup fails any test that logs a console error or warning.
 
 ## Workflow
 

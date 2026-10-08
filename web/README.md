@@ -34,7 +34,12 @@ src/
 └── test/           Vitest setup, MSW handlers
 ```
 
-Folders are created as each feature lands (see [../docs/ROADMAP.md](../docs/ROADMAP.md)).
+## Testing
+
+`npm test` runs Vitest with jsdom, Testing Library and MSW:
+- API calls go through the real `fetch` client and are answered by MSW handlers. Unhandled requests fail the test.
+- **Any `console.error` or `console.warn` fails the test** (`src/test/setup.ts`). React warnings, such as a missing `act()`, a missing key or an invalid DOM prop, can't slip through.
+- Tests query the UI by role and label, as a user would.
 
 ## Dependencies and why they are here
 

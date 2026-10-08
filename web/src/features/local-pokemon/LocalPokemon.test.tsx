@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { cleanup, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -29,7 +29,10 @@ describe('local Pokedex', () => {
   beforeEach(() =>
     useAuthStore.getState().login({ token: 'jwt', username: 'ash', expiresAt: new Date(Date.now() + 3_600_000).toISOString() }),
   )
-  afterEach(() => useAuthStore.getState().logout())
+  afterEach(() => {
+    cleanup()
+    useAuthStore.getState().logout()
+  })
 
   it('lists local Pokemon with their proprietary data', async () => {
     server.use(http.get('*/api/v1/local-pokemon', () => HttpResponse.json(page([annotatedPikachu, localPokemon(26, 'raichu')]))))

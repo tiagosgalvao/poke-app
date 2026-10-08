@@ -62,7 +62,7 @@ All Phase 3 code lives in `com.poke.identity`.
 - [x] **5.3 catalog page**: US01 responsive card grid (sprite, number, category, weight, ability chips with hidden ones marked), pagination in the URL (`?page=`, previous data kept while loading), skeleton cards, error state with retry
 - [x] **5.4 detail page**: US02 artwork, types, measures, abilities, accessible stat bars, description, an evolution chain grouped by stage (branches side by side, current Pokemon highlighted, triggers shown), and a not-found page
 - [x] **5.5 my pokedex page**: US03/US04 `/my-pokedex` list with proprietary data, a sync panel (ids, summary), an edit page (proprietary fields and tags, server 400 errors on their fields, 409 with "reload latest"), delete with an in-page confirm, and "Add to My Pokedex" on the detail page
-- [ ] **5.6 web tests and console cleanup**: MSW-backed tests per feature; zero console warnings
+- [x] **5.6 web tests and console cleanup**: tests now fail on any console error or warning (this caught and fixed `act()` warnings from session resets), plus tests for logout, expired sessions, pagination and formatting. 36 MSW-backed tests in total.
 - [ ] **5.7 web dockerfile and nginx**: SPA fallback and `/api` proxy; a `web` service in compose
 
 ## Phase 6: Delivery

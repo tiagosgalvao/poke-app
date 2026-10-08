@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { cleanup, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -25,7 +25,10 @@ const routes = [
 const token = { accessToken: 'jwt', tokenType: 'Bearer', expiresAt: new Date(Date.now() + 3_600_000).toISOString() }
 
 describe('authentication pages', () => {
-  afterEach(() => useAuthStore.getState().logout())
+  afterEach(() => {
+    cleanup()
+    useAuthStore.getState().logout()
+  })
 
   it('redirects a visitor to the login page and back after logging in', async () => {
     server.use(http.post('*/api/v1/auth/login', () => HttpResponse.json(token)))
