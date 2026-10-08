@@ -61,7 +61,7 @@ All Phase 3 code lives in `com.poke.identity`.
 - [x] **5.2 web auth**: persisted Zustand session (expiry-aware) wired into the API client (401 → logout), login and register pages (RHF + zod mirroring the API rules, server errors inline, register logs straight in), `<RequireAuth>` with redirect back, and a header with navigation and the user menu
 - [x] **5.3 catalog page**: US01 responsive card grid (sprite, number, category, weight, ability chips with hidden ones marked), pagination in the URL (`?page=`, previous data kept while loading), skeleton cards, error state with retry
 - [x] **5.4 detail page**: US02 artwork, types, measures, abilities, accessible stat bars, description, an evolution chain grouped by stage (branches side by side, current Pokemon highlighted, triggers shown), and a not-found page
-- [ ] **5.5 my pokedex page**: US03/US04 list, sync dialog, edit form (proprietary fields, tags), delete with in-page confirm, inline 400/409 errors
+- [x] **5.5 my pokedex page**: US03/US04 `/my-pokedex` list with proprietary data, a sync panel (ids, summary), an edit page (proprietary fields and tags, server 400 errors on their fields, 409 with "reload latest"), delete with an in-page confirm, and "Add to My Pokedex" on the detail page
 - [ ] **5.6 web tests and console cleanup**: MSW-backed tests per feature; zero console warnings
 - [ ] **5.7 web dockerfile and nginx**: SPA fallback and `/api` proxy; a `web` service in compose
 

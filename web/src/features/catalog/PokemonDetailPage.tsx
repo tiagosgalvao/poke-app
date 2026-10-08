@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router'
 import { ApiError } from '../../api/client'
 import { ErrorState } from '../../components/ErrorState'
 import { dexNumber, displayName } from '../../components/format'
+import { AddToPokedexButton } from '../local-pokemon/AddToPokedexButton'
 import { usePokemonDetail } from './catalogApi'
 import { EvolutionChain } from './EvolutionChain'
 import { StatBar } from './StatBar'
@@ -51,6 +52,7 @@ export function PokemonDetailPage() {
           <h2 className="text-3xl font-bold">{name}</h2>
           <p className="text-slate-500">{pokemon.category ?? 'Unknown category'}</p>
         </header>
+        <AddToPokedexButton name={pokemon.name} />
         {pokemon.description && <p className="text-slate-700">{pokemon.description}</p>}
         <dl className="grid grid-cols-3 gap-4 text-sm">
           <div>
