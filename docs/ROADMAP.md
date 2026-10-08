@@ -29,8 +29,8 @@ All Phase 1 code lives in `com.poke.catalog` and `com.poke.shared` ([D4](DECISIO
 
 - [x] **2.1 local schema migration** (all Phase 2 code lives in `com.poke.localpokemon`): Flyway `V1__schema.sql` (users, local_pokemon, types, abilities, tags), with a Testcontainers migration test
 - [x] **2.2 local pokemon domain**: `LocalPokemon` aggregate (import, refresh that never touches proprietary data, version check), `UpstreamData`, `ProprietaryData` (at most 10 normalized tags), `ProprietaryPatch`, `LocalPokemonRepository` and the not-found/conflict exceptions, with tests
-- [ ] **2.3 local pokemon service**: the `LocalPokemonRepository` domain interface and `LocalPokemonService` (sync, import, get, list, update, patch, delete), with tests
-- [ ] **2.4 jpa repository**: JPA entities, a Spring Data repository and the `LocalPokemonRepository` implementation in `localpokemon.repository`/`localpokemon.entity`, with `@DataJpaTest` (Testcontainers)
+- [x] **2.3 jpa repository**: `LocalPokemonEntity` (`Persistable` for assigned ids, `@Version`, ordered type/ability collections, tag set), the Spring Data `LocalPokemonJpaRepository` and `JpaLocalPokemonRepository` implementing the domain interface, with `@DataJpaTest` (Testcontainers)
+- [ ] **2.4 local pokemon service**: the `LocalPokemonRepository` domain interface and `LocalPokemonService` (sync, import, get, list, update, patch, delete), with tests
 - [ ] **2.5 sync from pokeapi**: bounded batch, idempotent refresh that keeps proprietary fields, and a summary response
 - [ ] **2.6 local pokemon endpoints** (request DTOs use Bean Validation; reassess [D20](DECISIONS.md#d20-validation-domain-guards-for-upstream-data-bean-validation-for-requests) here): `LocalPokemonController` (GET list/one, POST, PUT, PATCH, DELETE), with MVC tests for 400/404/409
 - [ ] **2.7 optimistic locking**: a `version` check that surfaces as 409
