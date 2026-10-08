@@ -147,6 +147,8 @@ cd web && npm run lint && npm run build
 
 Docker must be running for the API tests (Testcontainers).
 
+With the stack running, `scripts/smoke-test.sh` runs the demo flow against it through the nginx proxy: catalog, detail, auth, sync, update, import and delete, plus the 400/401/404/409 paths. It needs `curl` and `jq`.
+
 GitHub Actions runs the same checks on every push to `main` and on pull requests. `api.yml` runs the Gradle build with the coverage gate and uploads the test and JaCoCo reports. `web.yml` runs lint, tests and the production build. Each workflow only runs when its own folder changes.
 
 ## Documentation
@@ -169,4 +171,5 @@ web/                 React SPA: features/catalog · features/local-pokemon · fe
 docs/                design docs and screenshots
 docker-compose.yml   postgres + redis + api + web
 .github/workflows/   CI: api.yml and web.yml
+scripts/             smoke-test.sh, the end-to-end check against a running stack
 ```

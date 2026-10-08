@@ -28,6 +28,9 @@ settings.gradle.kts  composite build including api/, so IDEs import Gradle from 
 # whole stack in Docker (web http://localhost:3000, api http://localhost:8080)
 docker compose up --build
 
+# end-to-end check against the running stack (curl + jq)
+scripts/smoke-test.sh
+
 # infrastructure only, for local dev
 docker compose up -d postgres redis
 

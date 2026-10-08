@@ -70,7 +70,7 @@ All Phase 3 code lives in `com.poke.identity`.
 - [x] **6.1 final readme**: run instructions, screenshots, endpoint table, demo credentials
 - [x] **6.2 genai write-up**: `docs/GENAI.md` covering the Task-management API prompt, a representative output, validation and corrections, and edge cases, auth and validation; plus how GenAI was used on this project
 - [x] **6.3 github actions ci**: an `api` job (Gradle build + tests + JaCoCo) and a `web` job (lint + test + build), filtered by path
-- [ ] **6.4 fresh clone smoke test**: `docker compose up --build` from a clean clone, then the demo script below
+- [x] **6.4 fresh clone smoke test**: `docker compose up --build` from a clean clone, then the demo script below. `scripts/smoke-test.sh` automates the API side (24 checks through the nginx proxy: catalog, detail, 400/401/404/409 paths, sync, patch, import and delete). On a clean clone with no Docker cache, the stack was healthy in about 90 s and every check passed. A scripted browser walk through the demo found no console errors or warnings. The only console line was Chrome's own network log for the deliberate 409, which the browser prints for any failed HTTP response
 
 ## Demo script (for the presentation)
 
@@ -79,7 +79,7 @@ All Phase 3 code lives in `com.poke.identity`.
 3. Open Eevee to show the branching evolution chain, then Pikachu to show stats and description.
 4. Try *My Pokedex* while logged out, which redirects to login. Log in as `ash / Pikachu123!`.
 5. Sync ids 1–10 and show the created/refreshed summary.
-6. Edit Bulbasaur: set the localized name, region and tags. Show the validation error for a blank name, then save.
+6. Edit Bulbasaur: set the localized name, region and tags. Show the inline error for an invalid tag (`not a tag!`), then save. A blank field clears that value.
 7. Trigger a 409 by editing in two tabs. Delete a record.
 8. In Swagger UI, show the 404/400/401 ProblemDetail bodies.
 9. Walk through the code: `ArchitectureTest`, a service unit test, and the WireMock client test. Show the JaCoCo report.
