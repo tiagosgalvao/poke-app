@@ -46,7 +46,7 @@ All Phase 3 code lives in `com.poke.identity`.
 - [x] **3.4 security config**: stateless resource server validating the HS256 JWT; public GETs and auth endpoints, protected mutations and sync; ProblemDetail 401/403
 - [x] **3.5 auth endpoints**: `AuthController` (`POST /api/v1/auth/register` 201/400/409, `POST /api/v1/auth/login` 200/401), with `@WebMvcTest`
 - [x] **3.6 demo users seed**: `V3__seed_users.sql` (`admin / Admin123!`, `ash / Pikachu123!`)
-- [ ] **3.7 openapi bearer auth**: a bearer security scheme, so Swagger UI shows "Authorize"
+- [x] **3.7 openapi bearer auth**: a bearer security scheme, so Swagger UI shows "Authorize"
 
 ## Phase 4: Backend hardening and packaging
 

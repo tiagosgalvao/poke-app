@@ -280,7 +280,8 @@ sequenceDiagram
 - 401 and 403 responses are ProblemDetail JSON, produced by `ProblemDetailSecurityHandler` (the entry point and access-denied handler).
 - The HS256 key, `JwtEncoder` and `JwtDecoder` live in `shared.config.JwtConfig`. `identity.security.JwtTokenIssuer` signs tokens with the subject = username, a `uid` claim, `iat` and `exp`.
 - The API is stateless: no sessions, and CSRF is disabled because there are no cookies.
-- The seeded demo users are `admin / Admin123!` and `ash / Pikachu123!`.
+- The seeded demo users (`V3__seed_users.sql`) are `admin / Admin123!` and `ash / Pikachu123!`.
+- Swagger UI shows an **Authorize** button (`bearerAuth`, set up by `shared.config.OpenApiConfig`). Only the operations that need a token are marked as secured.
 
 ## 9. Frontend architecture
 
