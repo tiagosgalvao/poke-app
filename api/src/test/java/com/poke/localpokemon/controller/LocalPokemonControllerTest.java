@@ -4,6 +4,7 @@ import com.poke.catalog.domain.PokemonNotFoundException;
 import com.poke.localpokemon.domain.LocalPokemonAlreadyExistsException;
 import com.poke.localpokemon.domain.LocalPokemonNotFoundException;
 import com.poke.localpokemon.domain.ProprietaryPatch;
+import com.poke.localpokemon.domain.StaleVersionException;
 import com.poke.localpokemon.domain.SyncBatch;
 import com.poke.localpokemon.domain.SyncSummary;
 import com.poke.localpokemon.service.LocalPokemonService;
@@ -150,6 +151,17 @@ class LocalPokemonControllerTest {
 		mvc.perform(put(PIKACHU).contentType(APPLICATION_JSON).content("{\"version\":"))
 				.andExpect(status().isBadRequest())
 				.andExpect(content().contentTypeCompatibleWith(APPLICATION_PROBLEM_JSON));
+	}
+
+	@Test
+	void aStaleVersionIsAConflict() throws Exception {
+		when(localPokemonService.patch(25, 0, new ProprietaryPatch(null, "Johto", null, null, null)))
+				.thenThrow(new StaleVersionException(25, 0, 2));
+
+		mvc.perform(patch(PIKACHU).contentType(APPLICATION_JSON).content("{\"version\":0,\"region\":\"Johto\"}"))
+				.andExpect(status().isConflict())
+				.andExpect(content().contentTypeCompatibleWith(APPLICATION_PROBLEM_JSON))
+				.andExpect(jsonPath("$.detail").value("Local Pokemon 25 was modified meanwhile (version 2, not 0). Reload it and try again."));
 	}
 
 	@Test

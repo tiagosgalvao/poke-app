@@ -8,4 +8,8 @@ public class StaleVersionException extends ConflictException {
 		super("Local Pokemon " + id + " was modified meanwhile (version " + currentVersion + ", not "
 				+ expectedVersion + "). Reload it and try again.");
 	}
+
+	public StaleVersionException(int id) {
+		super("Local Pokemon " + id + " was modified meanwhile. Reload it and try again.");
+	}
 }
