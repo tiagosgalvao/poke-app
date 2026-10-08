@@ -28,7 +28,7 @@ All Phase 1 code lives in `com.poke.catalog` and `com.poke.shared` ([D4](DECISIO
 ## Phase 2: Local data (US03, US04, CRUD)
 
 - [x] **2.1 local schema migration** (all Phase 2 code lives in `com.poke.localpokemon`): Flyway `V1__schema.sql` (users, local_pokemon, types, abilities, tags), with a Testcontainers migration test
-- [ ] **2.2 local pokemon domain**: `LocalPokemon` with proprietary fields and invariants, with tests
+- [x] **2.2 local pokemon domain**: `LocalPokemon` aggregate (import, refresh that never touches proprietary data, version check), `UpstreamData`, `ProprietaryData` (at most 10 normalized tags), `ProprietaryPatch`, `LocalPokemonRepository` and the not-found/conflict exceptions, with tests
 - [ ] **2.3 local pokemon service**: the `LocalPokemonRepository` domain interface and `LocalPokemonService` (sync, import, get, list, update, patch, delete), with tests
 - [ ] **2.4 jpa repository**: JPA entities, a Spring Data repository and the `LocalPokemonRepository` implementation in `localpokemon.repository`/`localpokemon.entity`, with `@DataJpaTest` (Testcontainers)
 - [ ] **2.5 sync from pokeapi**: bounded batch, idempotent refresh that keeps proprietary fields, and a summary response

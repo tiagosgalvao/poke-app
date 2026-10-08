@@ -37,6 +37,13 @@ public final class Require {
 		return value;
 	}
 
+	public static <T> T present(T value, String field) {
+		if (value == null) {
+			throw new DomainValidationException(field + " must be present");
+		}
+		return value;
+	}
+
 	public static <T> List<T> copy(List<T> values) {
 		return values == null ? List.of() : List.copyOf(values);
 	}
