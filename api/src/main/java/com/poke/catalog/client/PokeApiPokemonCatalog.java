@@ -8,12 +8,17 @@ import com.poke.catalog.domain.EvolutionStage;
 import com.poke.catalog.domain.PokemonCatalog;
 import com.poke.catalog.domain.PokemonDetail;
 import com.poke.catalog.domain.PokemonSummary;
+import com.poke.shared.exception.DomainException;
+import com.poke.shared.exception.ExternalServiceUnavailableException;
 import com.poke.shared.pagination.Page;
 import com.poke.shared.pagination.PageRequest;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 @Component
 public class PokeApiPokemonCatalog implements PokemonCatalog {
@@ -27,10 +32,13 @@ public class PokeApiPokemonCatalog implements PokemonCatalog {
 	@Override
 	public Page<PokemonSummary> findPage(PageRequest request) {
 		var list = client.list(request.offset(), request.size());
-		var summaries = list.results().stream()
-				.map(entry -> summaryOf(entry.id()))
-				.toList();
-		return new Page<>(summaries, request.page(), request.size(), list.count());
+		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+			var pending = list.results().stream()
+					.map(entry -> executor.submit(() -> summaryOf(entry.id())))
+					.toList();
+			var summaries = pending.stream().map(PokeApiPokemonCatalog::await).toList();
+			return new Page<>(summaries, request.page(), request.size(), list.count());
+		}
 	}
 
 	@Override
@@ -61,6 +69,22 @@ public class PokeApiPokemonCatalog implements PokemonCatalog {
 				.flatMap(client::evolutionChain)
 				.map(chain -> EvolutionChainFlattener.flatten(chain.chain()))
 				.orElse(List.of());
+	}
+
+	private static PokemonSummary await(Future<PokemonSummary> summary) {
+		try {
+			return summary.get();
+		}
+		catch (ExecutionException failure) {
+			if (failure.getCause() instanceof DomainException domainFailure) {
+				throw domainFailure;
+			}
+			throw new ExternalServiceUnavailableException("PokeAPI request failed", failure.getCause());
+		}
+		catch (InterruptedException interrupted) {
+			Thread.currentThread().interrupt();
+			throw new ExternalServiceUnavailableException("Interrupted while calling PokeAPI", interrupted);
+		}
 	}
 
 	// Always follows species.url: for alternate forms (id ≥ 10001) the species id differs.

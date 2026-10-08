@@ -2,6 +2,7 @@ package com.poke.catalog.client;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.poke.catalog.domain.Ability;
+import com.poke.catalog.domain.PokemonSummary;
 import com.poke.catalog.domain.Stat;
 import com.poke.shared.exception.ExternalServiceUnavailableException;
 import com.poke.shared.pagination.PageRequest;
@@ -22,12 +23,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.poke.catalog.client.PokeApiFixtures.fixture;
 import static com.poke.catalog.client.PokeApiFixtures.stubFixture;
+import static com.poke.catalog.client.PokeApiFixtures.stubSlowFixture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PokeApiPokemonCatalogTest {
 
 	private static final Duration READ_TIMEOUT = Duration.ofMillis(800);
+	private static final Duration SLOW_RESPONSE = Duration.ofMillis(400);
 
 	@RegisterExtension
 	static WireMockExtension pokeApi = WireMockExtension.newInstance().options(wireMockConfig().dynamicPort()).build();
@@ -66,6 +69,36 @@ class PokeApiPokemonCatalogTest {
 		assertThat(pikachu.abilities()).containsExactly(new Ability("static", false), new Ability("lightning-rod", true));
 
 		assertThat(page.content().get(1).name()).isEqualTo("raichu");
+	}
+
+	@Test
+	void findPageFetchesEntriesConcurrently() throws IOException {
+		stubFixture(pokeApi, "/pokemon?offset=24&limit=2", "pokemon-list-offset24-limit2.json");
+		stubSlowFixture(pokeApi, "/pokemon/25/", "pokemon-25.json", SLOW_RESPONSE);
+		stubSlowFixture(pokeApi, "/pokemon-species/25/", "pokemon-species-25.json", SLOW_RESPONSE);
+		stubSlowFixture(pokeApi, "/pokemon/26/", "pokemon-26.json", SLOW_RESPONSE);
+		stubSlowFixture(pokeApi, "/pokemon-species/26/", "pokemon-species-26.json", SLOW_RESPONSE);
+
+		long started = System.nanoTime();
+		var page = catalog.findPage(new PageRequest(12, 2));
+		var elapsed = Duration.ofNanos(System.nanoTime() - started);
+
+		var sequentialTime = SLOW_RESPONSE.multipliedBy(4);
+		assertThat(page.content()).hasSize(2);
+		assertThat(elapsed).isLessThan(sequentialTime.minus(SLOW_RESPONSE));
+	}
+
+	@Test
+	void findPageKeepsTheUpstreamOrderEvenWhenEarlierEntriesAreSlower() throws IOException {
+		stubFixture(pokeApi, "/pokemon?offset=24&limit=2", "pokemon-list-offset24-limit2.json");
+		stubSlowFixture(pokeApi, "/pokemon/25/", "pokemon-25.json", SLOW_RESPONSE);
+		stubFixture(pokeApi, "/pokemon-species/25/", "pokemon-species-25.json");
+		stubFixture(pokeApi, "/pokemon/26/", "pokemon-26.json");
+		stubFixture(pokeApi, "/pokemon-species/26/", "pokemon-species-26.json");
+
+		var page = catalog.findPage(new PageRequest(12, 2));
+
+		assertThat(page.content()).extracting(PokemonSummary::name).containsExactly("pikachu", "raichu");
 	}
 
 	@Test
