@@ -67,7 +67,7 @@ All Phase 3 code lives in `com.poke.identity`.
 
 ## Phase 6: Delivery
 
-- [ ] **6.1 final readme**: run instructions, screenshots, endpoint table, demo credentials
+- [x] **6.1 final readme**: run instructions, screenshots, endpoint table, demo credentials
 - [ ] **6.2 genai write-up**: `docs/GENAI.md` covering the Task-management API prompt, a representative output, validation and corrections, and edge cases, auth and validation; plus how GenAI was used on this project
 - [ ] **6.3 github actions ci**: an `api` job (Gradle build + tests + JaCoCo) and a `web` job (lint + test + build), filtered by path
 - [ ] **6.4 fresh clone smoke test**: `docker compose up --build` from a clean clone, then the demo script below

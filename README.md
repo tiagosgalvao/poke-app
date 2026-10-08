@@ -2,7 +2,7 @@
 
 A full-stack Pokemon application. It has a **Java / Spring Boot REST API** that integrates with [PokeAPI](https://pokeapi.co/docs/v2) and keeps a local relational replica that can be enriched with proprietary data, and a **React** web client that consumes the API.
 
-> 🚧 Work in progress. See [docs/ROADMAP.md](docs/ROADMAP.md) for status.
+![Catalog](docs/screenshots/catalog.png)
 
 ## Purpose
 
@@ -37,46 +37,130 @@ The project shows how to build a robust backend service with **Clean Architectur
 | | |
 |---|---|
 | **Backend** | Java 25 · Spring Boot 4.1 · Gradle (Kotlin DSL) · PostgreSQL 17 + Flyway · Redis 8 cache · JWT auth |
-| **Frontend** | React 19 · TypeScript · Vite 8 · TanStack Query · Tailwind CSS 4 |
+| **Frontend** | React 19 · TypeScript · Vite 8 · TanStack Query · Zustand · react-hook-form + zod · Tailwind CSS 4 |
 | **Testing** | JUnit 5 · Mockito · WireMock · Testcontainers · ArchUnit · JaCoCo · Vitest · Testing Library · MSW |
+| **Packaging** | Docker multi-stage images (Temurin 25, nginx) · Docker Compose |
 
-## Quick start
+## Running it
 
 Prerequisites: Docker. For local development you also need JDK 25 and Node 24.
 
-**IDE:** open the repository root (`poke-app/`) in IntelliJ IDEA. The root `settings.gradle.kts` includes `api/` as a composite build, so Gradle is imported automatically. Set Gradle JVM to 25 if prompted.
+### Everything in Docker
 
 ```bash
-cp .env.example .env
-
-# everything in Docker: web on http://localhost:3000, API on http://localhost:8080
+cp .env.example .env        # optional: the defaults work as they are
 docker compose up --build
+```
 
-# or run only the infrastructure and start the API and web locally
+| What | Where |
+|---|---|
+| Web app | http://localhost:3000 |
+| API | http://localhost:8080/api/v1 |
+| Swagger UI | http://localhost:8080/swagger-ui.html |
+| Health | http://localhost:8080/actuator/health |
+
+Compose starts four services: `postgres`, `redis`, `api` and `web`. Each waits for the previous one to be healthy. Flyway creates the schema and seeds the demo data on the first start. nginx serves the SPA and proxies `/api` to the API, so the browser only ever talks to one origin.
+
+### Local development
+
+```bash
 docker compose up -d postgres redis
 
-# api
-cd api && ./gradlew bootRun          # http://localhost:8080  (Swagger: /swagger-ui.html)
-
-# web (another terminal)
-cd web && npm install && npm run dev # http://localhost:5173
+cd api && ./gradlew bootRun           # http://localhost:8080
+cd web && npm install && npm run dev  # http://localhost:5173, proxies /api to :8080
 ```
+
+**IDE:** open the repository root (`poke-app/`) in IntelliJ IDEA. The root `settings.gradle.kts` includes `api/` as a composite build, so Gradle is imported automatically. Set Gradle JVM to 25 if prompted.
+
+### Configuration
+
+Every setting comes from environment variables, with local defaults (see [.env.example](.env.example)):
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | `poke` | Database |
+| `JWT_SECRET` | a local dev secret | HS256 signing key, at least 32 bytes. Set a real one outside your machine: `openssl rand -base64 48` |
+| `JWT_TTL` | `2h` | Token lifetime |
+| `CACHE_TTL` | `24h` | How long PokeAPI responses stay in Redis |
+| `POKEAPI_BASE_URL` | `https://pokeapi.co/api/v2` | Upstream API |
+| `API_PORT` / `WEB_PORT` | `8080` / `3000` | Host ports |
+
+## Demo data and credentials
+
+| Username | Password |
+|---|---|
+| `ash` | `Pikachu123!` |
+| `admin` | `Admin123!` |
+
+The local store starts with 20 well-known Pokemon: the Kanto starters and their evolutions, Pikachu and Raichu, Eevee, Snorlax, Mewtwo, Mew and a few more. Some of them already carry proprietary data (localized name, region, habitat, tags, notes) and the rest are waiting to be enriched. You can also register a new account from the web app.
+
+## Screenshots
+
+| Detail with evolution chain (US02) | My Pokedex (US03) |
+|---|---|
+| ![Detail](docs/screenshots/detail.png) | ![My Pokedex](docs/screenshots/my-pokedex.png) |
+| **Editing proprietary data (US04)** | **Mobile** |
+| ![Edit](docs/screenshots/edit.png) | <img src="docs/screenshots/catalog-mobile.png" alt="Catalog on a phone" width="260"> |
+
+## API
+
+Everything is under `/api/v1`. Reads are public and writes need a `Bearer` token from `/auth/login`. The full contract, with request bodies, is in Swagger UI and [docs/ARCHITECTURE.md §6](docs/ARCHITECTURE.md#6-api-contract).
+
+| Method | Path | Auth | Story | What it does |
+|---|---|---|---|---|
+| `POST` | `/auth/register` | public | | Creates an account (201) |
+| `POST` | `/auth/login` | public | | Returns `{ accessToken, tokenType, expiresAt }` |
+| `GET` | `/pokemon?page=&size=` | public | US01 | Paginated catalog from PokeAPI with sprite, category, weight and abilities (cached) |
+| `GET` | `/pokemon/{idOrName}` | public | US02 | Image, types, stats, description and evolution chain (cached) |
+| `GET` | `/local-pokemon?page=&size=` | public | US03 | Locally stored Pokemon, with proprietary data |
+| `GET` | `/local-pokemon/{id}` | public | US03 | One local Pokemon |
+| `POST` | `/local-pokemon` | token | US03 | Imports one Pokemon from PokeAPI (201, 409 if already local) |
+| `POST` | `/local-pokemon/sync` | token | US03 | Creates or refreshes a batch of ids, keeping proprietary data |
+| `PUT` | `/local-pokemon/{id}` | token | US04 | Replaces the proprietary fields |
+| `PATCH` | `/local-pokemon/{id}` | token | US04 | Changes only the fields sent |
+| `DELETE` | `/local-pokemon/{id}` | token | US04 | Removes a local Pokemon (204) |
+
+Errors are RFC 9457 Problem Details with a `fieldErrors` list for validation:
+
+| Status | When |
+|---|---|
+| 400 | Malformed JSON, invalid fields, bad path or query parameters |
+| 401 | Missing, invalid or expired token on a protected route |
+| 404 | Unknown local record or upstream Pokemon |
+| 409 | Duplicate import or registration, or a stale `version` (optimistic locking) |
+| 503 | PokeAPI is down or timing out |
+
+## Testing
+
+```bash
+cd api && ./gradlew build   # unit, slice, WireMock and Testcontainers tests, ArchUnit, JaCoCo gate
+cd web && npm test          # Vitest + Testing Library + MSW
+cd web && npm run lint && npm run build
+```
+
+- The API build fails below 95% line or 90% branch coverage. The report is at `api/build/reports/jacoco/test/html/index.html`.
+- `ArchitectureTest` (ArchUnit) enforces the layering: the domain is plain Java, services never touch controllers or persistence, and features have no cycles.
+- PokeAPI is never called by the tests. WireMock replays recorded responses, and an end-to-end test runs the whole app against WireMock, Postgres and Redis containers.
+- The web tests fail on any console error or warning, which keeps the browser console clean.
+
+Docker must be running for the API tests (Testcontainers).
 
 ## Documentation
 
 - [API README](api/README.md): setup, configuration and what each backend dependency is for
-- [Web README](web/README.md): scripts, structure and what each frontend library is for
+- [Web README](web/README.md): scripts, structure, Docker image and what each frontend library is for
 - [Architecture](docs/ARCHITECTURE.md): layers, data model, API contract, caching, auth, testing
-- [Decision log](docs/DECISIONS.md): why each technical choice was made (ADR-style, D1–D20)
+- [Decision log](docs/DECISIONS.md): why each technical choice was made (ADR-style)
 - [PokeAPI reference](docs/POKEAPI.md): upstream endpoints, mapping and quirks
-- [Roadmap / next steps](docs/ROADMAP.md): numbered tasks, one commit each
+- [Roadmap](docs/ROADMAP.md): numbered tasks, one commit each, and the demo script
 - [Conventions](docs/CONVENTIONS.md): commit format, code style and best practices
 - [CLAUDE.md](CLAUDE.md): working agreement for AI-assisted development
 
 ## Repository layout
 
 ```
-api/    Spring Boot service (feature-first: catalog · localpokemon · identity, each with domain · service · client/repository · controller)
-web/    React SPA
-docs/   design docs
+api/                 Spring Boot service, feature-first: catalog · localpokemon · identity · shared
+web/                 React SPA: features/catalog · features/local-pokemon · features/auth
+docs/                design docs and screenshots
+docker-compose.yml   postgres + redis + api + web
 ```
