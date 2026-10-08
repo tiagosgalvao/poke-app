@@ -22,7 +22,7 @@ All Phase 1 code lives in `com.poke.catalog` and `com.poke.shared` ([D4](DECISIO
 - [x] **1.5 catalog service**: `CatalogService` (browse, getDetail with key normalization and not-found), with unit tests mocking `PokemonCatalog`
 - [x] **1.6 evolution chain and flavor text mapping**: flatten the chain while keeping branches; normalize the flavor text
 - [x] **1.7 parallel page fetch**: fan out per-item calls for list pages on virtual threads ([D19](DECISIONS.md#d19-virtual-threads-enabled-globally))
-- [ ] **1.8 catalog endpoints**: `PokemonController`, `PokemonResponses`, `PageResponse`, `GlobalExceptionHandler` (ProblemDetail) and `SecurityConfig`, with `@WebMvcTest`
+- [x] **1.8 catalog endpoints**: `PokemonController`, `PokemonResponses`, `PageResponse`, `GlobalExceptionHandler` (ProblemDetail) and `SecurityConfig`, with `@WebMvcTest`
 - [ ] **1.9 redis cache**: `@Cacheable` on `PokeApiClient`, typed JSON serializers, TTL, species trimming and `LoggingCacheErrorHandler`, with a test showing the second call hits the cache
 
 ## Phase 2: Local data (US03, US04, CRUD)
