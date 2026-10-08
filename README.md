@@ -1,5 +1,7 @@
 # Poke App
 
+[![api](https://github.com/tiagosgalvao/poke-app/actions/workflows/api.yml/badge.svg)](https://github.com/tiagosgalvao/poke-app/actions/workflows/api.yml) [![web](https://github.com/tiagosgalvao/poke-app/actions/workflows/web.yml/badge.svg)](https://github.com/tiagosgalvao/poke-app/actions/workflows/web.yml)
+
 A full-stack Pokemon application. It has a **Java / Spring Boot REST API** that integrates with [PokeAPI](https://pokeapi.co/docs/v2) and keeps a local relational replica that can be enriched with proprietary data, and a **React** web client that consumes the API.
 
 ![Catalog](docs/screenshots/catalog.png)
@@ -145,6 +147,8 @@ cd web && npm run lint && npm run build
 
 Docker must be running for the API tests (Testcontainers).
 
+GitHub Actions runs the same checks on every push to `main` and on pull requests. `api.yml` runs the Gradle build with the coverage gate and uploads the test and JaCoCo reports. `web.yml` runs lint, tests and the production build. Each workflow only runs when its own folder changes.
+
 ## Documentation
 
 - [API README](api/README.md): setup, configuration and what each backend dependency is for
@@ -164,4 +168,5 @@ api/                 Spring Boot service, feature-first: catalog · localpokemon
 web/                 React SPA: features/catalog · features/local-pokemon · features/auth
 docs/                design docs and screenshots
 docker-compose.yml   postgres + redis + api + web
+.github/workflows/   CI: api.yml and web.yml
 ```

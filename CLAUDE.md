@@ -18,6 +18,7 @@ api/   Spring Boot 4.1 · Java 25 · Gradle Kotlin DSL   (package root: com.poke
 web/   React 19 · TypeScript · Vite 8 · Tailwind 4
 docs/  ARCHITECTURE.md (design), DECISIONS.md (decision log), POKEAPI.md (upstream reference), CONVENTIONS.md (commits, code style, best practices), ROADMAP.md (numbered tasks), GENAI.md (GenAI write-up), screenshots/
 docker-compose.yml   postgres:17 + redis:8 + api + web (nginx on :3000, proxies /api to the api service)
+.github/workflows/   CI: api.yml (gradle build + coverage gate), web.yml (lint, test, build), path-filtered
 settings.gradle.kts  composite build including api/, so IDEs import Gradle from the repo root
 ```
 
