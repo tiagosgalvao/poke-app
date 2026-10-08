@@ -78,7 +78,7 @@ The repository is a monorepo:
 poke-app/
 ├── api/                  Spring Boot 4.1 · Java 25 · Gradle Kotlin DSL · feature-first packages
 ├── web/                  React 19 · TypeScript · Vite 8
-├── docs/                 this file, DECISIONS.md, POKEAPI.md, CONVENTIONS.md, ROADMAP.md, GENAI.md (later)
+├── docs/                 this file, DECISIONS.md, POKEAPI.md, CONVENTIONS.md, ROADMAP.md, GENAI.md, screenshots/
 ├── docker-compose.yml    postgres + redis + api + web
 ├── settings.gradle.kts   composite build including api/, so IDEs import Gradle from the repo root
 ├── .env.example

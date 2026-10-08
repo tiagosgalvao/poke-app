@@ -154,6 +154,7 @@ Docker must be running for the API tests (Testcontainers).
 - [PokeAPI reference](docs/POKEAPI.md): upstream endpoints, mapping and quirks
 - [Roadmap](docs/ROADMAP.md): numbered tasks, one commit each, and the demo script
 - [Conventions](docs/CONVENTIONS.md): commit format, code style and best practices
+- [GenAI](docs/GENAI.md): the task-management API prompt exercise, and how AI was used (and corrected) on this project
 - [CLAUDE.md](CLAUDE.md): working agreement for AI-assisted development
 
 ## Repository layout
