@@ -1,4 +1,5 @@
 import { createBrowserRouter } from 'react-router'
+import { CatalogPage } from '../features/catalog/CatalogPage'
 import { LoginPage } from '../features/auth/LoginPage'
 import { RegisterPage } from '../features/auth/RegisterPage'
 import { RequireAuth } from '../features/auth/RequireAuth'
@@ -9,7 +10,7 @@ export const router = createBrowserRouter([
     path: '/',
     element: <AppLayout />,
     children: [
-      { index: true, element: <p className="text-slate-600">Pokemon catalog coming soon.</p> },
+      { index: true, element: <CatalogPage /> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
       {
