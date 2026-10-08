@@ -43,7 +43,7 @@ All Phase 3 code lives in `com.poke.identity`.
 - [x] **3.1 identity domain**: `User` (normalized username and email), `RawPassword` (8–72 characters, never printed), `AccessToken`, the `UserRepository`, `PasswordHasher` and `TokenIssuer` interfaces, and the conflict/unauthorized exceptions, with tests
 - [x] **3.2 password, token and user storage**: BCrypt `PasswordHasher`, HS256 JWT `TokenIssuer` (Nimbus), and the JPA `users` repository, with tests
 - [x] **3.3 auth service**: `AuthService` (register with duplicate checks, login with one generic error for unknown user or wrong password), with Mockito tests
-- [ ] **3.4 security config**: stateless resource server validating the HS256 JWT; public GETs and auth endpoints, protected mutations and sync; ProblemDetail 401/403
+- [x] **3.4 security config**: stateless resource server validating the HS256 JWT; public GETs and auth endpoints, protected mutations and sync; ProblemDetail 401/403
 - [ ] **3.5 auth endpoints**: `AuthController` (`POST /api/v1/auth/register` 201/400/409, `POST /api/v1/auth/login` 200/401), with `@WebMvcTest`
 - [ ] **3.6 demo users seed**: `V3__seed_users.sql` (`admin / Admin123!`, `ash / Pikachu123!`)
 - [ ] **3.7 openapi bearer auth**: a bearer security scheme, so Swagger UI shows "Authorize"

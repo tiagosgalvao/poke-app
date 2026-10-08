@@ -274,8 +274,11 @@ sequenceDiagram
 
 - Passwords are hashed with BCrypt. Login never says which half of the credentials was wrong.
 - Tokens are HS256 JWTs signed with `JWT_SECRET` (at least 32 bytes) and expire after `JWT_TTL` (2 h by default). Spring Boot's built-in `oauth2-resource-server` validates them, so there is no hand-written filter.
-- There is a single implicit role. `GET` on the catalog and on local reads is public. Every mutation and the sync endpoint require a valid token.
-- 401 and 403 responses are ProblemDetail JSON, produced by a custom entry point and access-denied handler.
+- There is a single implicit role. `shared.config.SecurityConfig` defines the rules:
+  - **Public:** every `GET /api/v1/**` (the catalog and local reads), `POST /api/v1/auth/**` (register and login), health, info, OpenAPI and Swagger UI.
+  - **Requires a valid token:** everything else, meaning every local Pokemon mutation and sync.
+- 401 and 403 responses are ProblemDetail JSON, produced by `ProblemDetailSecurityHandler` (the entry point and access-denied handler).
+- The HS256 key, `JwtEncoder` and `JwtDecoder` live in `shared.config.JwtConfig`. `identity.security.JwtTokenIssuer` signs tokens with the subject = username, a `uid` claim, `iat` and `exp`.
 - The API is stateless: no sessions, and CSRF is disabled because there are no cookies.
 - The seeded demo users are `admin / Admin123!` and `ash / Pikachu123!`.
 

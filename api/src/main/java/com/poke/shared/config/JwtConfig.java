@@ -1,6 +1,7 @@
 package com.poke.shared.config;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -15,6 +16,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.springframework.security.oauth2.jose.jws.MacAlgorithm.HS256;
 
 @Configuration(proxyBeanMethods = false)
+@EnableConfigurationProperties(SecurityProperties.class)
 public class JwtConfig {
 
 	private static final String HMAC_SHA_256 = "HmacSHA256";

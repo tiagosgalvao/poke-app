@@ -28,6 +28,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -49,6 +50,28 @@ class LocalPokemonControllerTest {
 
 	@MockitoBean
 	LocalPokemonService localPokemonService;
+
+	@Test
+	void mutationsWithoutATokenAreUnauthorized() throws Exception {
+		mvc.perform(post(LOCAL_POKEMON).contentType(APPLICATION_JSON).content("{\"idOrName\":\"pikachu\"}"))
+				.andExpect(status().isUnauthorized())
+				.andExpect(content().contentTypeCompatibleWith(APPLICATION_PROBLEM_JSON))
+				.andExpect(jsonPath("$.status").value(401))
+				.andExpect(jsonPath("$.instance").value(LOCAL_POKEMON));
+		mvc.perform(put(PIKACHU).contentType(APPLICATION_JSON).content("{\"version\":0}")).andExpect(status().isUnauthorized());
+		mvc.perform(patch(PIKACHU).contentType(APPLICATION_JSON).content("{\"version\":0}")).andExpect(status().isUnauthorized());
+		mvc.perform(delete(PIKACHU)).andExpect(status().isUnauthorized());
+		mvc.perform(post(LOCAL_POKEMON + "/sync").contentType(APPLICATION_JSON).content("{\"ids\":[1]}"))
+				.andExpect(status().isUnauthorized());
+		verifyNoInteractions(localPokemonService);
+	}
+
+	@Test
+	void anInvalidTokenIsUnauthorized() throws Exception {
+		mvc.perform(delete(PIKACHU).header("Authorization", "Bearer not-a-real-token"))
+				.andExpect(status().isUnauthorized())
+				.andExpect(content().contentTypeCompatibleWith(APPLICATION_PROBLEM_JSON));
+	}
 
 	@Test
 	void listsLocalPokemonPageByPage() throws Exception {
@@ -91,7 +114,7 @@ class LocalPokemonControllerTest {
 	void importsAPokemonFromPokeApi() throws Exception {
 		when(localPokemonService.importPokemon("pikachu")).thenReturn(importedPikachu());
 
-		mvc.perform(post(LOCAL_POKEMON).contentType(APPLICATION_JSON).content("{\"idOrName\":\"pikachu\"}"))
+		mvc.perform(post(LOCAL_POKEMON).contentType(APPLICATION_JSON).content("{\"idOrName\":\"pikachu\"}").with(jwt()))
 				.andExpect(status().isCreated())
 				.andExpect(jsonPath("$.id").value(25));
 	}
@@ -100,7 +123,7 @@ class LocalPokemonControllerTest {
 	void importingTwiceIsAConflict() throws Exception {
 		when(localPokemonService.importPokemon("pikachu")).thenThrow(new LocalPokemonAlreadyExistsException(25));
 
-		mvc.perform(post(LOCAL_POKEMON).contentType(APPLICATION_JSON).content("{\"idOrName\":\"pikachu\"}"))
+		mvc.perform(post(LOCAL_POKEMON).contentType(APPLICATION_JSON).content("{\"idOrName\":\"pikachu\"}").with(jwt()))
 				.andExpect(status().isConflict())
 				.andExpect(jsonPath("$.detail").value("Pokemon 25 is already in the local Pokedex"));
 	}
@@ -109,13 +132,13 @@ class LocalPokemonControllerTest {
 	void importingAnUnknownPokemonIsA404() throws Exception {
 		when(localPokemonService.importPokemon("missingno")).thenThrow(new PokemonNotFoundException("missingno"));
 
-		mvc.perform(post(LOCAL_POKEMON).contentType(APPLICATION_JSON).content("{\"idOrName\":\"missingno\"}"))
+		mvc.perform(post(LOCAL_POKEMON).contentType(APPLICATION_JSON).content("{\"idOrName\":\"missingno\"}").with(jwt()))
 				.andExpect(status().isNotFound());
 	}
 
 	@Test
 	void importRequiresAnIdOrName() throws Exception {
-		mvc.perform(post(LOCAL_POKEMON).contentType(APPLICATION_JSON).content("{\"idOrName\":\" \"}"))
+		mvc.perform(post(LOCAL_POKEMON).contentType(APPLICATION_JSON).content("{\"idOrName\":\" \"}").with(jwt()))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.fieldErrors[0].field").value("idOrName"));
 		verifyNoInteractions(localPokemonService);
@@ -127,7 +150,7 @@ class LocalPokemonControllerTest {
 
 		mvc.perform(put(PIKACHU).contentType(APPLICATION_JSON).content("""
 						{"version":0,"localizedName":"ピカチュウ","region":"Kanto","habitat":"forest",
-						 "tags":["starter","mascot"],"notes":"Ash's partner"}"""))
+						 "tags":["starter","mascot"],"notes":"Ash's partner"}""").with(jwt()))
 				.andExpect(status().isOk());
 
 		verify(localPokemonService).update(25, 0, pikachuProprietary());
@@ -136,7 +159,7 @@ class LocalPokemonControllerTest {
 	@Test
 	void rejectsInvalidProprietaryDataWithFieldErrors() throws Exception {
 		mvc.perform(put(PIKACHU).contentType(APPLICATION_JSON).content("""
-						{"localizedName":"  ","tags":["no spaces allowed"]}"""))
+						{"localizedName":"  ","tags":["no spaces allowed"]}""").with(jwt()))
 				.andExpect(status().isBadRequest())
 				.andExpect(content().contentTypeCompatibleWith(APPLICATION_PROBLEM_JSON))
 				.andExpect(jsonPath("$.detail").value("Validation failed"))
@@ -148,7 +171,7 @@ class LocalPokemonControllerTest {
 
 	@Test
 	void rejectsMalformedJson() throws Exception {
-		mvc.perform(put(PIKACHU).contentType(APPLICATION_JSON).content("{\"version\":"))
+		mvc.perform(put(PIKACHU).contentType(APPLICATION_JSON).content("{\"version\":").with(jwt()))
 				.andExpect(status().isBadRequest())
 				.andExpect(content().contentTypeCompatibleWith(APPLICATION_PROBLEM_JSON));
 	}
@@ -158,7 +181,7 @@ class LocalPokemonControllerTest {
 		when(localPokemonService.patch(25, 0, new ProprietaryPatch(null, "Johto", null, null, null)))
 				.thenThrow(new StaleVersionException(25, 0, 2));
 
-		mvc.perform(patch(PIKACHU).contentType(APPLICATION_JSON).content("{\"version\":0,\"region\":\"Johto\"}"))
+		mvc.perform(patch(PIKACHU).contentType(APPLICATION_JSON).content("{\"version\":0,\"region\":\"Johto\"}").with(jwt()))
 				.andExpect(status().isConflict())
 				.andExpect(content().contentTypeCompatibleWith(APPLICATION_PROBLEM_JSON))
 				.andExpect(jsonPath("$.detail").value("Local Pokemon 25 was modified meanwhile (version 2, not 0). Reload it and try again."));
@@ -169,7 +192,7 @@ class LocalPokemonControllerTest {
 		var expectedPatch = new ProprietaryPatch(null, "Johto", null, null, null);
 		when(localPokemonService.patch(25, 3, expectedPatch)).thenReturn(importedPikachu());
 
-		mvc.perform(patch(PIKACHU).contentType(APPLICATION_JSON).content("{\"version\":3,\"region\":\"Johto\"}"))
+		mvc.perform(patch(PIKACHU).contentType(APPLICATION_JSON).content("{\"version\":3,\"region\":\"Johto\"}").with(jwt()))
 				.andExpect(status().isOk());
 
 		verify(localPokemonService).patch(25, 3, expectedPatch);
@@ -177,7 +200,7 @@ class LocalPokemonControllerTest {
 
 	@Test
 	void deletesALocalPokemon() throws Exception {
-		mvc.perform(delete(PIKACHU)).andExpect(status().isNoContent());
+		mvc.perform(delete(PIKACHU).with(jwt())).andExpect(status().isNoContent());
 
 		verify(localPokemonService).delete(25);
 	}
@@ -187,7 +210,7 @@ class LocalPokemonControllerTest {
 		when(localPokemonService.sync(new SyncBatch(List.of(1, 4, 7))))
 				.thenReturn(new SyncSummary(List.of(1, 4), List.of(7), List.of()));
 
-		mvc.perform(post(LOCAL_POKEMON + "/sync").contentType(APPLICATION_JSON).content("{\"ids\":[1,4,7]}"))
+		mvc.perform(post(LOCAL_POKEMON + "/sync").contentType(APPLICATION_JSON).content("{\"ids\":[1,4,7]}").with(jwt()))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.created[1]").value(4))
 				.andExpect(jsonPath("$.refreshed[0]").value(7))
@@ -198,14 +221,14 @@ class LocalPokemonControllerTest {
 	void syncsARangeOfIds() throws Exception {
 		when(localPokemonService.sync(SyncBatch.range(1, 3))).thenReturn(new SyncSummary(List.of(1, 2, 3), List.of(), List.of()));
 
-		mvc.perform(post(LOCAL_POKEMON + "/sync").contentType(APPLICATION_JSON).content("{\"fromId\":1,\"toId\":3}"))
+		mvc.perform(post(LOCAL_POKEMON + "/sync").contentType(APPLICATION_JSON).content("{\"fromId\":1,\"toId\":3}").with(jwt()))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.created.length()").value(3));
 	}
 
 	@Test
 	void rejectsAnOversizedSyncBatch() throws Exception {
-		mvc.perform(post(LOCAL_POKEMON + "/sync").contentType(APPLICATION_JSON).content("{\"fromId\":1,\"toId\":500}"))
+		mvc.perform(post(LOCAL_POKEMON + "/sync").contentType(APPLICATION_JSON).content("{\"fromId\":1,\"toId\":500}").with(jwt()))
 				.andExpect(status().isBadRequest());
 		verifyNoInteractions(localPokemonService);
 	}
