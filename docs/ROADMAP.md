@@ -16,7 +16,7 @@ The work is split into phases, and each phase into numbered tasks (`<phase>.<n>`
 All Phase 1 code lives in `com.poke.catalog` and `com.poke.shared` ([D4](DECISIONS.md#d4-feature-first-packages-with-clean-layers-inside)).
 
 - [x] **1.1 feature-first layout**: `ArchitectureTest` rules for feature-first packages (`domain`, `service`, `client`, `repository`, `entity`, `controller`), design docs, and a root `settings.gradle.kts` so IDEs import Gradle from the repo root
-- [ ] **1.2 shared kernel**: `shared.exception` (DomainException hierarchy), `shared.pagination` (`Page`, `PageRequest`), `shared.validation` (`Require`), with tests
+- [x] **1.2 shared kernel**: `shared.exception` (DomainException hierarchy), `shared.pagination` (`Page`, `PageRequest`), `shared.validation` (`Require`), with tests
 - [ ] **1.3 catalog domain model**: `PokemonSummary`, `PokemonDetail`, `Ability`, `Stat`, `EvolutionStage`, `PokemonKey`, `PokemonNotFoundException` and the `PokemonCatalog` interface, with tests
 - [ ] **1.4 pokeapi client**: `PokeApiClient` (RestClient, timeouts, 404 → empty, failures → 503), DTOs, mapper and `PokeApiPokemonCatalog`, with WireMock tests and fixtures (see [POKEAPI.md](POKEAPI.md))
 - [ ] **1.5 catalog service**: `CatalogService` (browse, getDetail with key normalization and not-found), with unit tests mocking `PokemonCatalog`
