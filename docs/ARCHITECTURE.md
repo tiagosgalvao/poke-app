@@ -128,7 +128,8 @@ flowchart LR
 | `domain` | Business types, invariants, domain exceptions, and the interfaces the feature needs from outside (`PokemonCatalog`, later `LocalPokemonRepository`) | `shared.exception`, `shared.pagination`, `shared.validation`, the JDK | Spring, JPA, Jackson; every other package |
 | `service` | `@Service` classes that orchestrate the domain (`@Transactional` from Phase 2) | `domain`, `shared.exception`, `shared.pagination` | `controller`, `client`, `repository`, `entity` |
 | `client` | Outbound HTTP: RestClient, DTOs, mapping, caching. Implements domain interfaces. | `domain`, frameworks | `controller`, `service` |
-| `repository` / `entity` (Phase 2) | Spring Data JPA repositories and `@Entity` classes. Implement domain interfaces. | `domain`, frameworks | `controller`, `service` |
+| `repository` / `entity` | Spring Data JPA repositories and `@Entity` classes. Implement domain interfaces. | `domain`, frameworks | `controller`, `service` |
+| `security` (identity) | BCrypt password hashing and JWT issuing. Implement domain interfaces. | `domain`, `shared.config`, frameworks | `controller`, `service` |
 | `controller` | REST controllers, request/response records | `service`, `domain`, `shared.pagination` | `client`, `repository`, `entity` |
 | `shared` | The kernel used by every feature: exceptions and their HTTP mapping, pagination, domain guards, security config | the JDK, Spring (`GlobalExceptionHandler` and `config` only) | any feature |
 

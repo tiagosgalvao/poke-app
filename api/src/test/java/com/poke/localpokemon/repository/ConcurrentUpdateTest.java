@@ -18,8 +18,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.util.List;
 import java.util.Set;
 
-import static com.poke.localpokemon.domain.LocalPokemonFixtures.LATER;
 import static com.poke.localpokemon.domain.LocalPokemonFixtures.IMPORTED_AT;
+import static com.poke.localpokemon.domain.LocalPokemonFixtures.LATER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;

@@ -17,6 +17,7 @@ class ArchitectureTest {
 	private static final String CLIENT = "com.poke..client..";
 	private static final String REPOSITORY = "com.poke..repository..";
 	private static final String ENTITY = "com.poke..entity..";
+	private static final String SECURITY = "com.poke..security..";
 
 	@ArchTest
 	static final ArchRule domainIsFrameworkFree = noClasses()
@@ -29,24 +30,24 @@ class ArchitectureTest {
 	@ArchTest
 	static final ArchRule domainDependsOnNoOtherLayer = noClasses()
 			.that().resideInAPackage(DOMAIN)
-			.should().dependOnClassesThat().resideInAnyPackage(SERVICE, CONTROLLER, CLIENT, REPOSITORY, ENTITY)
+			.should().dependOnClassesThat().resideInAnyPackage(SERVICE, CONTROLLER, CLIENT, REPOSITORY, ENTITY, SECURITY)
 			.allowEmptyShould(true);
 
 	@ArchTest
 	static final ArchRule servicesDependOnTheDomainOnly = noClasses()
 			.that().resideInAPackage(SERVICE)
-			.should().dependOnClassesThat().resideInAnyPackage(CONTROLLER, CLIENT, REPOSITORY, ENTITY)
+			.should().dependOnClassesThat().resideInAnyPackage(CONTROLLER, CLIENT, REPOSITORY, ENTITY, SECURITY)
 			.allowEmptyShould(true);
 
 	@ArchTest
 	static final ArchRule controllersOnlyCallServices = noClasses()
 			.that().resideInAPackage(CONTROLLER)
-			.should().dependOnClassesThat().resideInAnyPackage(CLIENT, REPOSITORY, ENTITY)
+			.should().dependOnClassesThat().resideInAnyPackage(CLIENT, REPOSITORY, ENTITY, SECURITY)
 			.allowEmptyShould(true);
 
 	@ArchTest
 	static final ArchRule clientsAndRepositoriesDoNotTouchControllersOrServices = noClasses()
-			.that().resideInAnyPackage(CLIENT, REPOSITORY, ENTITY)
+			.that().resideInAnyPackage(CLIENT, REPOSITORY, ENTITY, SECURITY)
 			.should().dependOnClassesThat().resideInAnyPackage(CONTROLLER, SERVICE)
 			.allowEmptyShould(true);
 

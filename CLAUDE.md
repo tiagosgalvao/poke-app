@@ -51,6 +51,7 @@ Packages are **feature-first** (`com.poke.<feature>`), with the usual Spring lay
 - **`<feature>.service`** holds `@Service` classes (and `@Transactional` from Phase 2). They depend on `domain` only, never on `controller`, `client`, `repository` or `entity`.
 - **`<feature>.client`** holds outbound HTTP (RestClient, DTOs, mapping, `@Cacheable`) and implements domain interfaces.
 - **`<feature>.repository` / `<feature>.entity`** hold Spring Data JPA repositories and `@Entity` classes, mapped to and from domain objects, and implement domain interfaces.
+- **`<feature>.security`** holds security infrastructure such as password hashing and token issuing (e.g. `identity.security`). It implements domain interfaces and follows the same rules as `client` and `repository`.
 - **`<feature>.controller`** holds REST controllers and request/response records. Controllers call services only, with no logic and no `client`, `repository` or `entity` imports.
 - **Enums** go in an `enums` package inside the feature or layer that owns them (e.g. `catalog.client.enums`).
 - **`shared`** depends on no feature. Features never form dependency cycles, and they talk to each other only through `service` classes.
