@@ -32,7 +32,7 @@ All Phase 1 code lives in `com.poke.catalog` and `com.poke.shared` ([D4](DECISIO
 - [x] **2.3 jpa repository**: `LocalPokemonEntity` (`Persistable` for assigned ids, `@Version`, ordered type/ability collections, tag set), the Spring Data `LocalPokemonJpaRepository` and `JpaLocalPokemonRepository` implementing the domain interface, with `@DataJpaTest` (Testcontainers)
 - [x] **2.4 local pokemon service**: `LocalPokemonService` (import via `CatalogService`, get, list, update, patch, delete; `@Transactional`), a `Clock` bean, and `spriteUrl` added to the catalog detail so imports copy it, with Mockito tests
 - [x] **2.5 sync from pokeapi**: `SyncBatch` (1–50 distinct positive ids, list or range), `LocalPokemonService.sync` creating or refreshing each Pokemon without touching proprietary data, unknown ids reported as failed, all-or-nothing on a PokeAPI outage, and a `SyncSummary`
-- [ ] **2.6 local pokemon endpoints** (request DTOs use Bean Validation; reassess [D20](DECISIONS.md#d20-validation-domain-guards-for-upstream-data-bean-validation-for-requests) here): `LocalPokemonController` (GET list/one, POST, PUT, PATCH, DELETE), with MVC tests for 400/404/409
+- [x] **2.6 local pokemon endpoints**: `LocalPokemonController` (GET list/one, POST import, PUT, PATCH, DELETE, POST sync), request DTOs with Bean Validation, ProblemDetail 409 for conflicts and 400 with `fieldErrors` ([D20](DECISIONS.md#d20-validation-domain-guards-for-upstream-data-bean-validation-for-requests) reassessed), and a shared `Measures` helper, with `@WebMvcTest`
 - [ ] **2.7 optimistic locking**: a `version` check that surfaces as 409
 - [ ] **2.8 local pokemon seed**: `V2__seed_local_pokemon.sql` with about 20 Pokemon, including proprietary data
 

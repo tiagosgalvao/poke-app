@@ -46,7 +46,7 @@ npm run build                # tsc -b + vite build
 
 Packages are **feature-first** (`com.poke.<feature>`), with the usual Spring layers inside each feature. See `docs/ARCHITECTURE.md` §4 and D4.
 
-- **Features:** `catalog` (US01–US02, PokeAPI), `localpokemon` (US03–US04, Postgres), `identity` (users and auth), plus a `shared` kernel (`shared.exception`, `shared.pagination`, `shared.validation`, `shared.config`).
+- **Features:** `catalog` (US01–US02, PokeAPI), `localpokemon` (US03–US04, Postgres), `identity` (users and auth), plus a `shared` kernel (`shared.exception`, `shared.pagination`, `shared.validation`, `shared.measure`, `shared.config`).
 - **`<feature>.domain`** is pure Java: no Spring, JPA, Jackson or servlet imports. It holds business types, invariants, domain exceptions, and the interfaces the feature needs from outside (e.g. `PokemonCatalog`, later `LocalPokemonRepository`).
 - **`<feature>.service`** holds `@Service` classes (and `@Transactional` from Phase 2). They depend on `domain` only, never on `controller`, `client`, `repository` or `entity`.
 - **`<feature>.client`** holds outbound HTTP (RestClient, DTOs, mapping, `@Cacheable`) and implements domain interfaces.
@@ -76,8 +76,8 @@ Packages are **feature-first** (`com.poke.<feature>`), with the usual Spring lay
     - 500: generic, with no internals leaked
 - **Validation (D20):**
   - Domain constructors guard invariants for data from any source, including upstream PokeAPI data. They use `shared.validation.Require` and value objects such as `PokemonKey`.
-  - Request bodies use Bean Validation (`@Valid` + `@NotBlank`/`@Size`/`@Pattern`) at the controller, from Phase 2.
-  - Revisit D20 when Phase 2 lands.
+  - Request bodies use Bean Validation (`@Valid` + `@NotBlank`/`@Size`/`@Pattern`) at the controller. Violations return 400 with `fieldErrors`.
+  - DTO limits reuse the domain constants (e.g. `ProprietaryData.MAX_TAGS`) so they never drift.
 - **Persistence:**
   - Flyway owns the schema, in `api/src/main/resources/db/migration/V{n}__desc.sql`. Never edit a migration that has been committed; add a new one.
   - `ddl-auto` stays `validate`.

@@ -274,7 +274,7 @@ Architecture Decision Records (ADR-style) for the Poke App. Each decision has a 
 
 ### D20. Validation: domain guards for upstream data, Bean Validation for requests
 
-- **Status:** Accepted. **Reassess when Phase 2 lands**, the first feature that takes request bodies.
+- **Status:** Accepted. Reassessed when Phase 2 landed (see *Phase 2 outcome* below).
 - **Context:**
   - Catalog domain records (`PokemonSummary`, `PokemonDetail`, `Ability`, `Stat`, `EvolutionStage`) and `Page`/`PageRequest` validate themselves in their constructors through `shared.validation.Require` (`text`, `positive`, `nonNegative`, `copy`).
   - The obvious alternative is Jakarta Bean Validation annotations (`@NotBlank`, `@Positive`, `@Min`/`@Max`).
@@ -302,3 +302,7 @@ Architecture Decision Records (ADR-style) for the Poke App. Each decision has a 
 - **Alternatives considered:**
   - **Bean Validation everywhere, calling `Validator.validate(...)` manually in the client:** it works, but it adds a framework dependency to the domain path and ceremony for read-only data.
   - **Domain guards everywhere, with no Bean Validation:** request DTOs would lose standard, declarative, per-field error messages.
+- **Phase 2 outcome (task 2.6):**
+  - Request bodies (`ImportRequest`, `ProprietaryUpdateRequest`, `ProprietaryPatchRequest`, `SyncRequest`) use Bean Validation: `@NotBlank`, `@Size`, `@Pattern`, `@NotNull`/`@PositiveOrZero` on `version`. `GlobalExceptionHandler` reports the violations as 400 with a `fieldErrors` extension.
+  - The `localpokemon` domain keeps only the rules that must hold whichever way data arrives (API or sync): at most 10 normalized tags, 1–50 distinct positive ids per sync batch, and the version check. The DTO limits mirror the domain constants (`ProprietaryData.MAX_TAGS`, `SyncBatch.MAX_IDS`), so the two never drift.
+  - Questions 2 (`page`/`size` annotations) and 3 (upstream mapping failures → 503) stay open. Neither blocks anything.

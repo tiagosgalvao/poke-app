@@ -42,6 +42,7 @@ com.poke
 ├── shared/
 │   ├── exception/      DomainException hierarchy; handler/GlobalExceptionHandler
 │   ├── pagination/     Page, PageRequest, PageResponse
+│   ├── measure/        Measures (unit conversion)
 │   ├── validation/     Require
 │   └── config/         SecurityConfig
 ├── catalog/            US01–US02

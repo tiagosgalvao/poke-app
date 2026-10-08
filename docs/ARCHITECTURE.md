@@ -94,6 +94,7 @@ com.poke
 ├── shared/                 shared kernel, used by every feature
 │   ├── exception/          DomainException hierarchy; handler/GlobalExceptionHandler (ProblemDetail)
 │   ├── pagination/         Page, PageRequest, PageResponse
+│   ├── measure/            Measures (PokeAPI hectograms/decimetres → kg/m)
 │   ├── validation/         Require (domain guards, see D20)
 │   └── config/             SecurityConfig
 ├── catalog/                US01–US02: the public Pokedex, read from PokeAPI
@@ -226,8 +227,21 @@ erDiagram
 | PokeAPI timeout or 5xx | 503 |
 | Anything unexpected | 500 (generic body, details only in logs) |
 
-- `PUT` replaces the editable fields and requires `version`. `PATCH` updates only the fields present (JSON merge-patch semantics) and also requires `version`.
-- `POST /local-pokemon/sync` accepts `{ "ids": [1, 4, 7] }` or `{ "fromId": 1, "toId": 20 }`, with at most 50 per call. It returns a summary of `created`, `refreshed` and `failed`.
+**Local Pokedex endpoints** (`/api/v1/local-pokemon`, implemented in `localpokemon.controller.LocalPokemonController`):
+
+| Method and path | Body | Success | Errors |
+|---|---|---|---|
+| `GET /` (`page`, `size`) | — | 200 `PageResponse` | 400 |
+| `GET /{id}` | — | 200 | 404 |
+| `POST /` | `{ "idOrName": "pikachu" }` | 201 | 400, 404 (unknown upstream), 409 (already local), 503 |
+| `PUT /{id}` | `version` + every proprietary field | 200 | 400, 404, 409 (stale `version`) |
+| `PATCH /{id}` | `version` + only the fields to change | 200 | 400, 404, 409 |
+| `DELETE /{id}` | — | 204 | 404 |
+| `POST /sync` | `{ "ids": [1, 4, 7] }` or `{ "fromId": 1, "toId": 20 }` | 200 `{ created, refreshed, failed }` | 400, 503 |
+
+- `PUT` replaces all proprietary fields: omitted ones become empty. `PATCH` changes only the fields that are present and not null, so a field is cleared with `PUT`. Both require the current `version`.
+- Sync takes at most 50 ids per call. It creates missing Pokemon and refreshes existing ones without touching proprietary data. Ids PokeAPI doesn't know are reported as `failed`. A PokeAPI outage aborts the whole batch (503), and nothing is saved.
+- Request bodies are validated with Bean Validation: lengths, a not-blank rule for present text fields, tags (letters, digits, hyphens, at most 10) and a required `version`. Violations return 400 with `fieldErrors`.
 
 ## 7. PokeAPI integration & caching
 

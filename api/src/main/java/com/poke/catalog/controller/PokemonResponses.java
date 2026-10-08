@@ -8,20 +8,12 @@ import com.poke.catalog.domain.Stat;
 
 import java.util.List;
 
+import static com.poke.shared.measure.Measures.kilograms;
+import static com.poke.shared.measure.Measures.metres;
+
 final class PokemonResponses {
 
-	private static final double HECTOGRAMS_PER_KILOGRAM = 10.0;
-	private static final double DECIMETRES_PER_METRE = 10.0;
-
 	private PokemonResponses() {
-	}
-
-	private static double kilograms(int hectograms) {
-		return hectograms / HECTOGRAMS_PER_KILOGRAM;
-	}
-
-	private static double metres(int decimetres) {
-		return decimetres / DECIMETRES_PER_METRE;
 	}
 
 	record AbilityResponse(String name, boolean hidden) {
