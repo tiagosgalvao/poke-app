@@ -4,6 +4,7 @@ import com.poke.shared.exception.ConflictException;
 import com.poke.shared.exception.DomainValidationException;
 import com.poke.shared.exception.ExternalServiceUnavailableException;
 import com.poke.shared.exception.NotFoundException;
+import com.poke.shared.exception.UnauthorizedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -21,6 +22,7 @@ import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
@@ -40,6 +42,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(NotFoundException.class)
 	ProblemDetail handleNotFound(NotFoundException exception) {
 		return ProblemDetail.forStatusAndDetail(NOT_FOUND, exception.getMessage());
+	}
+
+	@ExceptionHandler(UnauthorizedException.class)
+	ProblemDetail handleUnauthorized(UnauthorizedException exception) {
+		return ProblemDetail.forStatusAndDetail(UNAUTHORIZED, exception.getMessage());
 	}
 
 	@ExceptionHandler(ConflictException.class)
