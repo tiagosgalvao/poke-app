@@ -1,0 +1,38 @@
+# OS / editors
+.DS_Store
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+/out/
+/api/out/
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Java / Gradle (api/)
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+*.class
+*.log
+hs_err_pid*
+replay_pid*
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+# Node / Vite (web/)
+node_modules/
+dist/
+dist-ssr/
+coverage/
+*.local
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
