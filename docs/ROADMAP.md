@@ -38,12 +38,15 @@ All Phase 1 code lives in `com.poke.catalog` and `com.poke.shared` ([D4](DECISIO
 
 ## Phase 3: Authentication
 
-- [ ] **3.1 auth domain and service** (all Phase 3 code lives in `com.poke.identity`): `User`, `UserRepository`, `PasswordHasher` and `TokenIssuer` domain interfaces, and `AuthService` (register, login), with tests
-- [ ] **3.2 bcrypt and jwt support**: BCrypt hasher, HS256 token issuer and the JPA `users` repository
-- [ ] **3.3 security config**: stateless; public GETs, protected mutations; ProblemDetail for 401/403
-- [ ] **3.4 auth endpoints**: `AuthController`, with MVC tests (register 201/409/400, login 200/401)
-- [ ] **3.5 demo users seed**: `V3__seed_users.sql` (`admin / Admin123!`, `ash / Pikachu123!`)
-- [ ] **3.6 openapi bearer auth**: a bearer security scheme, so Swagger UI shows "Authorize"
+All Phase 3 code lives in `com.poke.identity`.
+
+- [x] **3.1 identity domain**: `User` (normalized username and email), `RawPassword` (8–72 characters, never printed), `AccessToken`, the `UserRepository`, `PasswordHasher` and `TokenIssuer` interfaces, and the conflict/unauthorized exceptions, with tests
+- [ ] **3.2 password, token and user storage**: BCrypt `PasswordHasher`, HS256 JWT `TokenIssuer` (Nimbus), and the JPA `users` repository, with tests
+- [ ] **3.3 auth service**: `AuthService` (register with duplicate checks, login with one generic error for unknown user or wrong password), with Mockito tests
+- [ ] **3.4 security config**: stateless resource server validating the HS256 JWT; public GETs and auth endpoints, protected mutations and sync; ProblemDetail 401/403
+- [ ] **3.5 auth endpoints**: `AuthController` (`POST /api/v1/auth/register` 201/400/409, `POST /api/v1/auth/login` 200/401), with `@WebMvcTest`
+- [ ] **3.6 demo users seed**: `V3__seed_users.sql` (`admin / Admin123!`, `ash / Pikachu123!`)
+- [ ] **3.7 openapi bearer auth**: a bearer security scheme, so Swagger UI shows "Authorize"
 
 ## Phase 4: Backend hardening and packaging
 
