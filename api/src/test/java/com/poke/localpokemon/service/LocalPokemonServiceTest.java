@@ -4,17 +4,21 @@ import com.poke.catalog.domain.Ability;
 import com.poke.catalog.domain.PokemonDetail;
 import com.poke.catalog.domain.PokemonNotFoundException;
 import com.poke.catalog.service.CatalogService;
+import com.poke.localpokemon.domain.LocalPokemon;
 import com.poke.localpokemon.domain.LocalPokemonAlreadyExistsException;
 import com.poke.localpokemon.domain.LocalPokemonNotFoundException;
 import com.poke.localpokemon.domain.LocalPokemonRepository;
 import com.poke.localpokemon.domain.ProprietaryData;
 import com.poke.localpokemon.domain.ProprietaryPatch;
 import com.poke.localpokemon.domain.StaleVersionException;
+import com.poke.localpokemon.domain.SyncBatch;
+import com.poke.shared.exception.ExternalServiceUnavailableException;
 import com.poke.shared.pagination.Page;
 import com.poke.shared.pagination.PageRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -170,6 +174,54 @@ class LocalPokemonServiceTest {
 
 		assertThatThrownBy(() -> service.delete(26)).isInstanceOf(LocalPokemonNotFoundException.class);
 		verify(repository, never()).deleteById(26);
+	}
+
+	@Test
+	void syncCreatesMissingPokemonAndRefreshesExistingOnesKeepingProprietaryData() {
+		var annotated = importedPikachu().withProprietary(pikachuProprietary(), IMPORTED_AT);
+		when(catalogService.getDetail("25")).thenReturn(pikachuDetail());
+		when(catalogService.getDetail("26")).thenReturn(raichuDetail());
+		when(repository.findById(25)).thenReturn(Optional.of(annotated));
+		when(repository.findById(26)).thenReturn(Optional.empty());
+		var saved = ArgumentCaptor.forClass(LocalPokemon.class);
+		when(repository.save(saved.capture())).thenAnswer(invocation -> invocation.getArgument(0));
+
+		var summary = service.sync(new SyncBatch(List.of(25, 26)));
+
+		assertThat(summary.created()).containsExactly(26);
+		assertThat(summary.refreshed()).containsExactly(25);
+		assertThat(summary.failed()).isEmpty();
+		var refreshedPikachu = saved.getAllValues().getFirst();
+		assertThat(refreshedPikachu.proprietary()).isEqualTo(pikachuProprietary());
+		assertThat(refreshedPikachu.syncedAt()).isEqualTo(LATER);
+		assertThat(saved.getAllValues().get(1).upstream().name()).isEqualTo("raichu");
+	}
+
+	@Test
+	void syncReportsPokemonThatPokeApiDoesNotKnowAsFailed() {
+		when(catalogService.getDetail("25")).thenReturn(pikachuDetail());
+		when(catalogService.getDetail("99999")).thenThrow(new PokemonNotFoundException("99999"));
+		when(repository.findById(25)).thenReturn(Optional.empty());
+		when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+		var summary = service.sync(new SyncBatch(List.of(25, 99999)));
+
+		assertThat(summary.created()).containsExactly(25);
+		assertThat(summary.failed()).containsExactly(99999);
+	}
+
+	@Test
+	void syncAbortsWhenPokeApiIsUnavailable() {
+		when(catalogService.getDetail("25")).thenThrow(new ExternalServiceUnavailableException("down", null));
+
+		assertThatThrownBy(() -> service.sync(new SyncBatch(List.of(25))))
+				.isInstanceOf(ExternalServiceUnavailableException.class);
+		verify(repository, never()).save(any());
+	}
+
+	private static PokemonDetail raichuDetail() {
+		return new PokemonDetail(26, "raichu", null, null, "Mouse Pokemon", 300, 8, List.of("electric"),
+				List.of(new Ability("static", false)), List.of(), null, List.of());
 	}
 
 	private static PokemonDetail pikachuDetail() {

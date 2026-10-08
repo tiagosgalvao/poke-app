@@ -2,6 +2,7 @@ package com.poke.localpokemon.service;
 
 import com.poke.catalog.domain.Ability;
 import com.poke.catalog.domain.PokemonDetail;
+import com.poke.catalog.domain.PokemonNotFoundException;
 import com.poke.catalog.service.CatalogService;
 import com.poke.localpokemon.domain.LocalPokemon;
 import com.poke.localpokemon.domain.LocalPokemonAlreadyExistsException;
@@ -9,6 +10,8 @@ import com.poke.localpokemon.domain.LocalPokemonNotFoundException;
 import com.poke.localpokemon.domain.LocalPokemonRepository;
 import com.poke.localpokemon.domain.ProprietaryData;
 import com.poke.localpokemon.domain.ProprietaryPatch;
+import com.poke.localpokemon.domain.SyncBatch;
+import com.poke.localpokemon.domain.SyncSummary;
 import com.poke.localpokemon.domain.UpstreamData;
 import com.poke.shared.pagination.Page;
 import com.poke.shared.pagination.PageRequest;
@@ -16,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
+import java.util.ArrayList;
 
 @Service
 public class LocalPokemonService {
@@ -69,6 +73,31 @@ public class LocalPokemonService {
 			throw new LocalPokemonNotFoundException(id);
 		}
 		repository.deleteById(id);
+	}
+
+	@Transactional
+	public SyncSummary sync(SyncBatch batch) {
+		var created = new ArrayList<Integer>();
+		var refreshed = new ArrayList<Integer>();
+		var failed = new ArrayList<Integer>();
+		for (var id : batch.ids()) {
+			try {
+				var upstream = upstreamOf(catalogService.getDetail(Integer.toString(id)));
+				var existing = repository.findById(id);
+				if (existing.isPresent()) {
+					repository.save(existing.get().refreshedWith(upstream, clock.instant()));
+					refreshed.add(id);
+				}
+				else {
+					repository.save(LocalPokemon.importFrom(id, upstream, clock.instant()));
+					created.add(id);
+				}
+			}
+			catch (PokemonNotFoundException unknownUpstream) {
+				failed.add(id);
+			}
+		}
+		return new SyncSummary(created, refreshed, failed);
 	}
 
 	static UpstreamData upstreamOf(PokemonDetail detail) {
