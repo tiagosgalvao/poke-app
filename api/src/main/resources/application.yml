@@ -26,6 +26,8 @@ spring:
 poke:
   pokeapi:
     base-url: ${POKEAPI_BASE_URL:https://pokeapi.co/api/v2}
+    connect-timeout: ${POKEAPI_CONNECT_TIMEOUT:2s}
+    read-timeout: ${POKEAPI_READ_TIMEOUT:5s}
   security:
     jwt-secret: ${JWT_SECRET:change-me-in-env-this-is-only-a-local-dev-secret-32b}
     token-ttl: ${JWT_TTL:2h}

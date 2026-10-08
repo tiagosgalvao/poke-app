@@ -1,0 +1,15 @@
+{
+  "count": 1351,
+  "next": "https://pokeapi.co/api/v2/pokemon?offset=26&limit=2",
+  "previous": "https://pokeapi.co/api/v2/pokemon?offset=22&limit=2",
+  "results": [
+    {
+      "name": "pikachu",
+      "url": "https://pokeapi.co/api/v2/pokemon/25/"
+    },
+    {
+      "name": "raichu",
+      "url": "https://pokeapi.co/api/v2/pokemon/26/"
+    }
+  ]
+}
