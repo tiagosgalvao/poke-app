@@ -49,7 +49,7 @@ com.poke
 │   ├── service/        CatalogService
 │   ├── client/         PokeApiClient, PokeApiPokemonCatalog, mapper, cache config, dto/, enums/
 │   └── controller/     PokemonController, PokemonResponses
-├── pokedex/            US03–US04 (Phase 2): domain, service, repository, entity, controller
+├── localpokemon/       US03–US04 (Phase 2): domain, service, repository, entity, controller
 └── identity/           users and auth (Phase 3)
 ```
 

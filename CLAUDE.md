@@ -46,7 +46,7 @@ npm run build                # tsc -b + vite build
 
 Packages are **feature-first** (`com.poke.<feature>`), with the usual Spring layers inside each feature. See `docs/ARCHITECTURE.md` §4 and D4.
 
-- **Features:** `catalog` (US01–US02, PokeAPI), `pokedex` (US03–US04, Postgres), `identity` (users and auth), plus a `shared` kernel (`shared.exception`, `shared.pagination`, `shared.validation`, `shared.config`).
+- **Features:** `catalog` (US01–US02, PokeAPI), `localpokemon` (US03–US04, Postgres), `identity` (users and auth), plus a `shared` kernel (`shared.exception`, `shared.pagination`, `shared.validation`, `shared.config`).
 - **`<feature>.domain`** is pure Java: no Spring, JPA, Jackson or servlet imports. It holds business types, invariants, domain exceptions, and the interfaces the feature needs from outside (e.g. `PokemonCatalog`, later `LocalPokemonRepository`).
 - **`<feature>.service`** holds `@Service` classes (and `@Transactional` from Phase 2). They depend on `domain` only, never on `controller`, `client`, `repository` or `entity`.
 - **`<feature>.client`** holds outbound HTTP (RestClient, DTOs, mapping, `@Cacheable`) and implements domain interfaces.
@@ -85,7 +85,7 @@ Packages are **feature-first** (`com.poke.<feature>`), with the usual Spring lay
   - Configuration comes from env vars with defaults in `application.yml`, under the `poke.*` prefix.
   - Secrets come only from env. Never commit a real `.env`.
 - **Web:**
-  - Feature folders live under `src/features/{catalog,pokedex,auth}`, mirroring the backend features.
+  - Feature folders live under `src/features/{catalog,local-pokemon,auth}`, mirroring the backend features.
   - Server state goes through TanStack Query hooks. Don't keep API data in Zustand.
   - Auth state lives in the Zustand store.
   - Forms use react-hook-form + zod, with schemas that mirror the API rules.

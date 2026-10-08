@@ -53,7 +53,7 @@ class ArchitectureTest {
 	@ArchTest
 	static final ArchRule sharedKernelDependsOnNoFeature = noClasses()
 			.that().resideInAPackage("com.poke.shared..")
-			.should().dependOnClassesThat().resideInAnyPackage("com.poke.catalog..", "com.poke.pokedex..", "com.poke.identity..")
+			.should().dependOnClassesThat().resideInAnyPackage("com.poke.catalog..", "com.poke.localpokemon..", "com.poke.identity..")
 			.allowEmptyShould(true);
 
 	@ArchTest

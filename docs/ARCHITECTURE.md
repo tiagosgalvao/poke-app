@@ -103,7 +103,7 @@ com.poke
 │   ├── client/             PokeApiClient (RestClient + cache), PokeApiPokemonCatalog (implements PokemonCatalog),
 │   │                       PokeApiMapper, EvolutionChainFlattener, FlavorText, PokeApiCacheConfig, dto/, enums/
 │   └── controller/         PokemonController, PokemonResponses
-├── pokedex/                US03–US04 (Phase 2): domain/, service/, repository/ (Spring Data JPA), entity/, controller/
+├── localpokemon/           US03–US04 (Phase 2): domain/, service/, repository/ (Spring Data JPA), entity/, controller/
 └── identity/               Phase 3: users, registration, login (JWT)
 ```
 
@@ -140,9 +140,11 @@ flowchart LR
 - **Dependency inversion only where it pays off: outbound I/O.** The service depends on `PokemonCatalog`, a domain interface, and `PokeApiPokemonCatalog` implements it with RestClient. In Phase 2, the local Pokedex works the same way with a `LocalPokemonRepository` interface implemented with Spring Data JPA. Inbound, controllers call services directly; there are no use-case interfaces.
 - **JPA entities stay in `entity`** and are mapped to and from domain objects. Response DTOs are records next to the controllers, so the domain never leaks out of a controller.
 - **Validation is split by where data comes from** ([D20](DECISIONS.md#d20-validation-domain-guards-for-upstream-data-bean-validation-for-requests)). Domain constructors guard invariants whatever the entry point, including upstream PokeAPI data. Bean Validation (`@Valid` + annotations) validates request DTOs at the controller from Phase 2. Both map to 400.
-- **Features talk to each other only through `service` classes.** For example, pokedex sync will call `CatalogService`.
+- **Features talk to each other only through `service` classes.** For example, local Pokemon sync will call `CatalogService`.
 
 ## 5. Data model
+
+The schema is created by `V1__schema.sql`:
 
 ```mermaid
 erDiagram
@@ -154,38 +156,46 @@ erDiagram
     timestamptz created_at
   }
   LOCAL_POKEMON {
-    int id PK "PokeAPI national dex number"
+    int id PK "PokeAPI national dex number, > 0"
     varchar name UK
     varchar sprite_url
+    varchar image_url
     varchar category
-    int weight "hectograms, as PokeAPI"
-    int height "decimetres, as PokeAPI"
-    jsonb base_stats
+    int weight_hectograms ">= 0, as PokeAPI"
+    int height_decimetres ">= 0, as PokeAPI"
     varchar localized_name "proprietary"
     varchar region "proprietary"
     varchar habitat "proprietary"
-    text notes "proprietary"
+    varchar notes "proprietary"
     bigint version "optimistic lock"
     timestamptz synced_at
     timestamptz updated_at
   }
+  LOCAL_POKEMON_TYPE {
+    int pokemon_id FK
+    int position
+    varchar type
+  }
   LOCAL_POKEMON_ABILITY {
     int pokemon_id FK
+    int position
     varchar ability
   }
   LOCAL_POKEMON_TAG {
     int pokemon_id FK
     varchar tag "proprietary"
   }
+  LOCAL_POKEMON ||--o{ LOCAL_POKEMON_TYPE : has
   LOCAL_POKEMON ||--o{ LOCAL_POKEMON_ABILITY : has
   LOCAL_POKEMON ||--o{ LOCAL_POKEMON_TAG : tagged
 ```
 
 - The primary key is the PokeAPI id. A record has exactly one upstream origin, so re-syncing is idempotent and duplicates map to 409.
-- Flyway owns the schema (`ddl-auto: validate`). Planned migrations:
-  - `V1__schema.sql`
-  - `V2__seed_users.sql`
-  - `V3__seed_local_pokemon.sql`, which seeds about 20 Pokemon so the demo works offline.
+- Types and abilities keep PokeAPI's order (`position`). Tags are a set. All three cascade on delete.
+- Flyway owns the schema (`ddl-auto: validate`). Migrations:
+  - `V1__schema.sql`: tables and constraints;
+  - `V2__seed_local_pokemon.sql`: about 20 Pokemon so the demo works offline (task 2.8);
+  - `V3__seed_users.sql`: the demo users (task 3.5).
 - Re-syncing refreshes the upstream fields and **never overwrites** the proprietary ones.
 
 ## 6. API contract
@@ -272,7 +282,7 @@ web/src/
 ├── api/            typed fetch client, ProblemDetail parsing, auth header, 401 → logout
 ├── features/
 │   ├── catalog/    US01 list + US02 detail (hooks, components)
-│   ├── pokedex/    US03 sync + US04 edit + CRUD (My Pokedex)
+│   ├── local-pokemon/   US03 sync + US04 edit + CRUD (My Pokedex)
 │   └── auth/       login / register forms, auth store, <RequireAuth>
 ├── components/     shared UI (Pagination, StatBar, ErrorState, Skeleton…)
 ├── routes/         router + layouts

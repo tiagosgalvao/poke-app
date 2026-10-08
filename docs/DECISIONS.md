@@ -67,7 +67,7 @@ Architecture Decision Records (ADR-style) for the Poke App. Each decision has a 
   - Clean Architecture only requires the **dependency rule**: business rules independent of frameworks, UI and data access, with dependencies pointing inward. Any package layout that respects it qualifies.
   - The codebase is small, and reviewers should find a feature in one place, named the way most Spring projects name things.
 - **Decision:**
-  - Package by feature (bounded context): `catalog`, `pokedex`, `identity`, plus a small `shared` kernel (`exception`, `pagination`, `validation`, `config`).
+  - Package by feature (bounded context): `catalog`, `localpokemon`, `identity`, plus a small `shared` kernel (`exception`, `pagination`, `validation`, `config`).
   - Inside each feature, use the familiar Spring package names: `domain`, `service`, `client`, `repository`, `entity`, `controller`. The flow is controller → service → client/repository.
   - `ArchitectureTest` (ArchUnit) enforces:
     - the domain is framework-free (no Spring, JPA or Jackson);

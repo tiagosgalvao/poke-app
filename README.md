@@ -75,7 +75,7 @@ Once the Dockerfiles are added (Phase 4–5), the whole stack runs with `docker 
 ## Repository layout
 
 ```
-api/    Spring Boot service (feature-first: catalog · pokedex · identity, each with domain · service · client/repository · controller)
+api/    Spring Boot service (feature-first: catalog · localpokemon · identity, each with domain · service · client/repository · controller)
 web/    React SPA
 docs/   design docs
 ```
