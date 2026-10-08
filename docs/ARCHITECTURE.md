@@ -5,7 +5,7 @@ This is the living design document for the Poke App, a Spring Boot API plus a Re
 - [1. Scope](#1-scope)
 - [2. User stories → API](#2-user-stories--api)
 - [3. System overview](#3-system-overview)
-- [4. Backend architecture (Clean / Hexagonal)](#4-backend-architecture-clean--hexagonal)
+- [4. Backend architecture (feature-first Clean Architecture)](#4-backend-architecture-feature-first-clean-architecture)
 - [5. Data model](#5-data-model)
 - [6. API contract](#6-api-contract)
 - [7. PokeAPI integration & caching](#7-pokeapi-integration--caching)
@@ -76,65 +76,71 @@ The repository is a monorepo:
 
 ```
 poke-app/
-├── api/                  Spring Boot 4.1 · Java 25 · Gradle Kotlin DSL
+├── api/                  Spring Boot 4.1 · Java 25 · Gradle Kotlin DSL · feature-first packages
 ├── web/                  React 19 · TypeScript · Vite 8
 ├── docs/                 this file, DECISIONS.md, POKEAPI.md, CONVENTIONS.md, ROADMAP.md, GENAI.md (later)
 ├── docker-compose.yml    postgres + redis (+ api + web once Dockerfiles land)
+├── settings.gradle.kts   composite build including api/, so IDEs import Gradle from the repo root
 ├── .env.example
 └── CLAUDE.md             working agreement for AI-assisted development
 ```
 
-## 4. Backend architecture (Clean / Hexagonal)
+## 4. Backend architecture (feature-first Clean Architecture)
 
-```mermaid
-flowchart TB
-  subgraph adapters_in[adapter.in.web]
-    ctrl[Controllers · DTOs · ExceptionHandler]
-  end
-  subgraph application
-    portin[[port.in<br/>use-case interfaces]]
-    svc[service<br/>use-case impls]
-    portout[[port.out<br/>catalog · repos · hasher · tokens]]
-  end
-  subgraph domain
-    model[Entities · value objects · invariants · domain exceptions]
-  end
-  subgraph adapters_out[adapter.out]
-    pokeapi[pokeapi<br/>RestClient + @Cacheable]
-    persistence[persistence<br/>JPA + Spring Data]
-    security[security<br/>BCrypt + JWT]
-  end
-  config[config<br/>bean wiring]
+The code is organised **by feature** (a bounded context, in DDD terms). Each feature uses the familiar Spring layers **controller → service → client/repository**, named the way they're named in most Spring projects. The Clean Architecture dependency rule applies inside each feature: dependencies point inward, toward the domain.
 
-  ctrl --> portin
-  svc -. implements .-> portin
-  svc --> portout
-  svc --> model
-  pokeapi -. implements .-> portout
-  persistence -. implements .-> portout
-  security -. implements .-> portout
-  config --> svc
-  config --> adapters_out
+```
+com.poke
+├── shared/                 shared kernel, used by every feature
+│   ├── exception/          DomainException hierarchy; handler/GlobalExceptionHandler (ProblemDetail)
+│   ├── pagination/         Page, PageRequest, PageResponse
+│   ├── validation/         Require (domain guards, see D20)
+│   └── config/             SecurityConfig
+├── catalog/                US01–US02: the public Pokedex, read from PokeAPI
+│   ├── domain/             PokemonSummary, PokemonDetail, Ability, Stat, EvolutionStage, PokemonKey,
+│   │                       PokemonNotFoundException, PokemonCatalog (interface)
+│   ├── service/            CatalogService
+│   ├── client/             PokeApiClient (RestClient + cache), PokeApiPokemonCatalog (implements PokemonCatalog),
+│   │                       PokeApiMapper, EvolutionChainFlattener, FlavorText, PokeApiCacheConfig, dto/, enums/
+│   └── controller/         PokemonController, PokemonResponses
+├── pokedex/                US03–US04 (Phase 2): domain/, service/, repository/ (Spring Data JPA), entity/, controller/
+└── identity/               Phase 3: users, registration, login (JWT)
 ```
 
-**The dependency rule:** source dependencies point inward only.
+```mermaid
+flowchart LR
+  subgraph catalog
+    direction LR
+    ctrl[controller<br/>PokemonController] --> svc[service<br/>CatalogService]
+    svc --> dom[domain<br/>PokemonCatalog · PokemonDetail …]
+    cli[client<br/>PokeApiPokemonCatalog · PokeApiClient] -. implements .-> dom
+    cli --> api[(PokeAPI)]
+  end
+  ctrl --> shared[shared<br/>exception · pagination · validation · config]
+  svc --> shared
+```
 
-| Layer | Package | May depend on | Must not depend on |
+**The dependency rule:**
+
+| Package | Holds | May depend on | Must not depend on |
 |---|---|---|---|
-| Domain | `com.poke.domain` | JDK only | everything else, including Spring, JPA and Jackson |
-| Application | `com.poke.application` | `domain` | adapters, config, Spring, JPA, HTTP |
-| Adapters | `com.poke.adapter..` | `application`, `domain`, frameworks | other adapters (in ↛ out), config |
-| Config | `com.poke.config` | everything | — (nothing depends on config) |
+| `domain` | Business types, invariants, domain exceptions, and the interfaces the feature needs from outside (`PokemonCatalog`, later `LocalPokemonRepository`) | `shared.exception`, `shared.pagination`, `shared.validation`, the JDK | Spring, JPA, Jackson; every other package |
+| `service` | `@Service` classes that orchestrate the domain (`@Transactional` from Phase 2) | `domain`, `shared.exception`, `shared.pagination` | `controller`, `client`, `repository`, `entity` |
+| `client` | Outbound HTTP: RestClient, DTOs, mapping, caching. Implements domain interfaces. | `domain`, frameworks | `controller`, `service` |
+| `repository` / `entity` (Phase 2) | Spring Data JPA repositories and `@Entity` classes. Implement domain interfaces. | `domain`, frameworks | `controller`, `service` |
+| `controller` | REST controllers, request/response records | `service`, `domain`, `shared.pagination` | `client`, `repository`, `entity` |
+| `shared` | The kernel used by every feature: exceptions and their HTTP mapping, pagination, domain guards, security config | the JDK, Spring (`GlobalExceptionHandler` and `config` only) | any feature |
 
-`ArchitectureTest` (ArchUnit) enforces these rules, so a violation fails the build.
+`ArchitectureTest` (ArchUnit) enforces these rules and also checks that features have no dependency cycles between them. A violation fails the build.
 
 **Consequences:**
 
-- Use-case services are **plain Java classes**. They are instantiated as `@Bean`s in `config`, not annotated with `@Service`, which makes them unit-testable with no Spring context.
-- JPA entities live in `adapter.out.persistence` and are mapped to and from domain objects. Domain objects are never annotated with `@Entity`.
-- Web DTOs are records in `adapter.in.web`, and the domain never leaks out of a controller.
-- Bean Validation on the DTOs handles *shape* (required fields, lengths, formats). Business invariants live in the domain, such as "a localized name may not be blank" or "at most 10 tags". Both layers map to 400.
-- Transactions are opened at the adapter or config boundary, never inside the domain.
+- **The domain stays pure Java**, so it's unit-tested with no Spring context.
+- **Services are ordinary `@Service` beans** and never touch HTTP or JPA types directly.
+- **Dependency inversion only where it pays off: outbound I/O.** The service depends on `PokemonCatalog`, a domain interface, and `PokeApiPokemonCatalog` implements it with RestClient. In Phase 2, the local Pokedex works the same way with a `LocalPokemonRepository` interface implemented with Spring Data JPA. Inbound, controllers call services directly; there are no use-case interfaces.
+- **JPA entities stay in `entity`** and are mapped to and from domain objects. Response DTOs are records next to the controllers, so the domain never leaks out of a controller.
+- **Validation is split by where data comes from** ([D20](DECISIONS.md#d20-validation-domain-guards-for-upstream-data-bean-validation-for-requests)). Domain constructors guard invariants whatever the entry point, including upstream PokeAPI data. Bean Validation (`@Valid` + annotations) validates request DTOs at the controller from Phase 2. Both map to 400.
+- **Features talk to each other only through `service` classes.** For example, pokedex sync will call `CatalogService`.
 
 ## 5. Data model
 
@@ -187,13 +193,17 @@ erDiagram
 - Every resource is under the base path `/api/v1`. OpenAPI docs are served at `/swagger-ui.html`.
 - **Collections** return:
   ```json
-  { "content": [...], "page": 0, "size": 20, "totalElements": 1302, "totalPages": 66 }
+  { "content": [...], "page": 0, "size": 20, "totalElements": 1351, "totalPages": 68 }
   ```
   `size` is capped at 50, and a value outside the range returns 400.
-- **Errors** are [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) `application/problem+json`:
+- **Errors** are [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) `application/problem+json`, produced by `shared.exception.handler.GlobalExceptionHandler`:
   ```json
-  { "type": "about:blank", "title": "Bad Request", "status": 400,
-    "detail": "Validation failed", "instance": "/api/v1/local-pokemon/25",
+  { "title": "Not Found", "status": 404,
+    "detail": "Pokemon 'missingno' was not found", "instance": "/api/v1/pokemon/missingno" }
+  ```
+  From Phase 2, request-body validation errors add a `fieldErrors` extension:
+  ```json
+  { "title": "Bad Request", "status": 400, "detail": "Validation failed", "instance": "/api/v1/local-pokemon/25",
     "fieldErrors": [ { "field": "localizedName", "message": "must not be blank" } ] }
   ```
 
@@ -215,9 +225,9 @@ The upstream endpoints, payloads, field mapping and quirks are documented in [PO
 
 - **Client:** Spring `RestClient` with connect and read timeouts. The base URL is configurable through `POKEAPI_BASE_URL`, so tests point it at WireMock.
 - **US01 list:** `GET /pokemon?offset&limit` returns only names and URLs. For each entry, the client then fetches `/pokemon/{id}` (sprite, weight, abilities) and `/pokemon-species/{id}` (English `genus`, which is the category). These run in parallel on virtual threads ([D19](DECISIONS.md#d19-virtual-threads-enabled-globally)).
-- **US02 detail:** `/pokemon/{id}`, `/pokemon-species/{id}` (English flavor text, with `\f` and `\n` normalized), then `evolution_chain.url`. The chain tree is flattened into ordered stages; branches such as Eevee are kept as siblings.
-- **Caching:** Spring Cache backed by Redis, with JSON values and a 24 h TTL (`CACHE_TTL`), since PokeAPI data is effectively static. Caching happens per upstream resource: `pokemon`, `species`, `evolution-chain` and `pokemon-page`. Different pages that share Pokemon therefore reuse the same entries.
-- **Resilience:** a custom `CacheErrorHandler` logs Redis failures and falls through to PokeAPI, so a cache outage never breaks the API. Upstream 404 becomes a domain `PokemonNotFoundException` (404), and timeouts or 5xx become `ExternalServiceUnavailableException` (503).
+- **US02 detail:** `/pokemon/{id}`, `/pokemon-species/{id}` (the latest English flavor text, with `\f`, `\n` and soft hyphens normalized), then `evolution_chain.url`. The chain tree is flattened into ordered stages; branches such as Eevee are kept as siblings.
+- **Caching:** Spring Cache backed by Redis, with a 24 h TTL (`CACHE_TTL`), since PokeAPI data is effectively static. `@Cacheable` sits on the PokeAPI client, so the cached values are the trimmed upstream responses, stored as JSON. Caching happens per upstream resource: `pokemon`, `species`, `evolution-chain` and `pokemon-page`. Different pages that share Pokemon therefore reuse the same entries.
+- **Resilience:** Spring's `LoggingCacheErrorHandler`, combined with 500 ms Redis timeouts, logs Redis failures and falls through to PokeAPI, so a cache outage never breaks the API. Upstream 404 becomes an empty result, which `CatalogService` turns into `PokemonNotFoundException` (404). Timeouts, 5xx and malformed responses become `ExternalServiceUnavailableException` or its subtype `MalformedPokeApiResponseException` (503).
 
 ## 8. Authentication (minimal JWT)
 
@@ -262,7 +272,7 @@ web/src/
 ├── api/            typed fetch client, ProblemDetail parsing, auth header, 401 → logout
 ├── features/
 │   ├── catalog/    US01 list + US02 detail (hooks, components)
-│   ├── local/      US03 sync + US04 edit + CRUD (My Pokedex)
+│   ├── pokedex/    US03 sync + US04 edit + CRUD (My Pokedex)
 │   └── auth/       login / register forms, auth store, <RequireAuth>
 ├── components/     shared UI (Pagination, StatBar, ErrorState, Skeleton…)
 ├── routes/         router + layouts
@@ -286,15 +296,15 @@ TDD workflow: write a failing test, make it pass, then refactor. Commit history 
 
 | Level | Tooling | What |
 |---|---|---|
-| Domain & use cases | JUnit 5, AssertJ, Mockito | Invariants and orchestration; ports are mocked. This is the bulk of the suite. |
-| Web adapter | `@WebMvcTest` + Spring Security test | Status codes, validation → 400, ProblemDetail shape, public vs protected routes |
-| PokeAPI adapter | WireMock + JSON fixtures | Mapping (Pikachu, Eevee's branching chain), 404, 5xx, timeout |
-| Persistence adapter | `@DataJpaTest` + Testcontainers Postgres | Flyway migrations, mapping, optimistic locking |
+| Domain & services | JUnit 5, AssertJ, Mockito | Invariants and orchestration, with outbound interfaces (e.g. `PokemonCatalog`) mocked. This is the bulk of the suite. |
+| Web (controllers) | `@WebMvcTest` + Spring Security test | Status codes, validation → 400, ProblemDetail shape, public vs protected routes |
+| PokeAPI client | WireMock + JSON fixtures | Mapping (Pikachu, Eevee's branching chain), 404, 5xx, timeout |
+| Persistence (JPA) | `@DataJpaTest` + Testcontainers Postgres | Flyway migrations, mapping, optimistic locking |
 | End-to-end | `@SpringBootTest` + Testcontainers (Postgres, Redis) + WireMock | Register → login → sync → update → error paths; a cache hit on the second call |
-| Architecture | ArchUnit | Dependency rule ([§4](#4-backend-architecture-clean--hexagonal)) |
+| Architecture | ArchUnit | Dependency rule and feature isolation ([§4](#4-backend-architecture-feature-first-clean-architecture)) |
 | Web | Vitest + Testing Library + MSW | Catalog renders and paginates, login flow, edit form validation and server errors |
 
-Coverage comes from JaCoCo, with a reporting target of ≥ 80% on `domain` and `application`.
+Coverage comes from JaCoCo, with a reporting target of ≥ 80% on `domain` and `service`.
 
 ## 11. Runtime topology
 
@@ -310,4 +320,4 @@ Configuration is driven by environment variables (see `.env.example`), with sens
 
 ## 12. Decision log
 
-All architecture decisions (D1–D19), with their context, consequences and the alternatives considered, are recorded in **[DECISIONS.md](DECISIONS.md)**.
+All architecture decisions (D1–D20), with their context, consequences and the alternatives considered, are recorded in **[DECISIONS.md](DECISIONS.md)**.

@@ -27,7 +27,7 @@ src/
 ├── api/            typed fetch client: base URL, bearer header, ProblemDetail errors, 401 → logout
 ├── features/
 │   ├── catalog/    US01 list + US02 detail (query hooks + components)
-│   ├── local/      US03 sync + US04 edit/delete ("My Pokedex")
+│   ├── pokedex/    US03 sync + US04 edit/delete ("My Pokedex")
 │   └── auth/       login/register forms, auth store, route guard
 ├── components/     shared UI (pagination, stat bar, skeletons, error state…)
 ├── routes/         router definition + layouts

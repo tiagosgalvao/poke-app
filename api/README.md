@@ -26,27 +26,34 @@ Every setting comes from an environment variable, with a local default in `src/m
 |---|---|---|
 | `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` | `jdbc:postgresql://localhost:5432/poke` / `poke` / `poke` | PostgreSQL connection |
 | `REDIS_HOST` / `REDIS_PORT` | `localhost` / `6379` | Redis cache |
+| `REDIS_TIMEOUT` / `REDIS_CONNECT_TIMEOUT` | `500ms` / `500ms` | Kept short so a Redis outage falls back to PokeAPI quickly |
 | `CACHE_TTL` | `24h` | Time-to-live for cached PokeAPI data |
 | `POKEAPI_BASE_URL` | `https://pokeapi.co/api/v2` | Upstream API (tests point it at WireMock) |
+| `POKEAPI_CONNECT_TIMEOUT` / `POKEAPI_READ_TIMEOUT` | `2s` / `5s` | Upstream timeouts; exceeding them returns 503 |
 | `JWT_SECRET` | dev-only value | HS256 signing key, at least 32 bytes |
 | `JWT_TTL` | `2h` | Access token lifetime |
 
 ## Package layout
 
+Feature-first, with the usual Spring layers inside each feature (see [D4](../docs/DECISIONS.md#d4-feature-first-packages-with-clean-layers-inside)):
+
 ```
 com.poke
-├── domain                    pure Java: entities, value objects, invariants, domain exceptions
-├── application
-│   ├── port.in               use-case interfaces (what the app offers)
-│   ├── port.out              what the app needs (PokeAPI, repositories, hashing, tokens)
-│   └── service               use-case implementations (plain classes, no Spring)
-├── adapter
-│   ├── in.web                REST controllers, DTOs, ProblemDetail exception handler
-│   └── out.{pokeapi, persistence, security}
-└── config                    Spring wiring
+├── shared/
+│   ├── exception/      DomainException hierarchy; handler/GlobalExceptionHandler
+│   ├── pagination/     Page, PageRequest, PageResponse
+│   ├── validation/     Require
+│   └── config/         SecurityConfig
+├── catalog/            US01–US02
+│   ├── domain/         PokemonSummary, PokemonDetail, EvolutionStage, PokemonKey, PokemonCatalog (interface)
+│   ├── service/        CatalogService
+│   ├── client/         PokeApiClient, PokeApiPokemonCatalog, mapper, cache config, dto/, enums/
+│   └── controller/     PokemonController, PokemonResponses
+├── pokedex/            US03–US04 (Phase 2): domain, service, repository, entity, controller
+└── identity/           users and auth (Phase 3)
 ```
 
-`ArchitectureTest` enforces the dependency rule: `domain ← application ← adapter / config`.
+`ArchitectureTest` enforces the dependency rule: `controller → service → domain ← client / repository`. The domain stays framework-free, and features have no cycles between them.
 
 ## Dependencies and why they are here
 
@@ -57,12 +64,13 @@ Versions are managed by the Spring Boot BOM (Boot **4.1.1**) unless pinned in `b
 | Dependency | What it does here |
 |---|---|
 | **spring-boot-starter-webmvc** | The REST layer: `@RestController`, JSON serialization (Jackson), embedded Tomcat, and `RestClient`, the HTTP client used to call PokeAPI. Virtual threads are enabled (`spring.threads.virtual.enabled`), so blocking calls stay cheap and the PokeAPI fan-out can run concurrently (see [D19](../docs/DECISIONS.md#d19-virtual-threads-enabled-globally)). |
-| **spring-boot-starter-validation** | Bean Validation (Hibernate Validator). `@NotBlank`, `@Size`, `@Pattern` and similar annotations on request DTOs reject malformed payloads with **400** before they reach a use case. |
-| **spring-boot-starter-data-jpa** | Hibernate + Spring Data JPA, used only inside `adapter.out.persistence`. It provides entities, repositories, optimistic locking (`@Version` → **409**) and paging. |
+| **spring-boot-starter-restclient** | Auto-configures the `RestClient.Builder` used by the PokeAPI client, with Boot's Jackson setup and HTTP observability. Boot 4 ships it as a separate module. |
+| **spring-boot-starter-validation** | Bean Validation (Hibernate Validator). `@NotBlank`, `@Size`, `@Pattern` and similar annotations on request DTOs reject malformed payloads with **400** before they reach a service. |
+| **spring-boot-starter-data-jpa** | Hibernate + Spring Data JPA, used only inside `<feature>.repository` and `<feature>.entity`. It provides entities, repositories, optimistic locking (`@Version` → **409**) and paging. |
 | **postgresql** (runtime) | JDBC driver for PostgreSQL, the system's source of truth. |
 | **spring-boot-starter-flyway** + **flyway-database-postgresql** | Versioned SQL migrations (`src/main/resources/db/migration/V{n}__*.sql`) for both schema and seed data. Hibernate only *validates* the schema (`ddl-auto: validate`) and never changes it. |
-| **spring-boot-starter-cache** | The Spring Cache abstraction (`@Cacheable`), applied in the PokeAPI adapter, so the caching policy stays out of the business layer. |
-| **spring-boot-starter-data-redis** | Redis as the cache store: shared across instances and inspectable during the demo (`redis-cli KEYS '*'`). A `CacheErrorHandler` makes the API fall back to PokeAPI if Redis is down. |
+| **spring-boot-starter-cache** | The Spring Cache abstraction (`@Cacheable`), applied on `PokeApiClient` in `catalog.client`, so the caching policy stays out of the business layer. |
+| **spring-boot-starter-data-redis** | Redis as the cache store: shared across instances and inspectable during the demo (`redis-cli KEYS '*'`). A `LoggingCacheErrorHandler` plus 500 ms Redis timeouts make the API fall back to PokeAPI if Redis is down. |
 | **spring-boot-starter-security** | Authentication and authorization: a stateless filter chain, public vs protected routes, and BCrypt password hashing. |
 | **spring-boot-starter-security-oauth2-resource-server** | Validates `Authorization: Bearer <JWT>` tokens (HS256 signature and expiry) with Spring's built-in support, so there's no hand-written JWT filter. It also brings Nimbus JOSE, which is used to *issue* tokens at login. |
 | **spring-boot-starter-actuator** | `/actuator/health` (with liveness and readiness probes), used by the Docker healthcheck. Only `health` and `info` are exposed. |
@@ -75,7 +83,7 @@ Versions are managed by the Spring Boot BOM (Boot **4.1.1**) unless pinned in `b
 |---|---|
 | **spring-boot-starter-\*-test** (webmvc, data-jpa, security, …) | JUnit 5, AssertJ, Mockito and Spring test slices: `@WebMvcTest` for controllers, `@DataJpaTest` for repositories, plus security test helpers that let tests act as an authenticated user. |
 | **spring-boot-testcontainers** + **testcontainers-junit-jupiter** + **testcontainers-postgresql** | Starts **real** Postgres 17 and Redis 8 containers for integration tests (`TestcontainersConfiguration`). `@ServiceConnection` wires them in automatically, so tests run against the same engines as production, not H2. `TestPokeApiApplication` reuses the same setup to run the app locally with no compose. |
-| **archunit-junit5** `1.5.0` | `ArchitectureTest` turns the Clean Architecture rules into failing tests: no Spring or JPA in `domain` and `application`, inward-only dependencies, and no `adapter.in` → `adapter.out`. |
+| **archunit-junit5** `1.5.0` | `ArchitectureTest` turns the Clean Architecture rules into failing tests: no Spring, JPA or Jackson in any `domain`, inward-only dependencies, controllers never touching clients or repositories, and no cycles between features. |
 | **wiremock-standalone** `3.13.2` | A fake PokeAPI over real HTTP, using recorded JSON fixtures. It tests mapping, 404, 5xx and timeouts deterministically and without network access. |
 | **junit-platform-launcher** | Required by Gradle to run the JUnit Platform. |
 

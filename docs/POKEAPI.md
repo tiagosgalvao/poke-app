@@ -36,7 +36,7 @@ This page documents only the parts of PokeAPI the Poke App depends on: the endpo
 |---|---|---|
 | US01 list page | `GET /pokemon?offset&limit`, then for each result `GET /pokemon/{id}` and `GET /pokemon-species/{id}` | `pokemon-page`, `pokemon`, `species` |
 | US02 detail | `GET /pokemon/{idOrName}`, then `GET {species.url}`, then `GET {species.evolution_chain.url}` | `pokemon`, `species`, `evolution-chain` |
-| US03 sync / import | `GET /pokemon/{id}` and `GET /pokemon-species/{id}`, reusing the same cached adapter methods | `pokemon`, `species` |
+| US03 sync / import | `GET /pokemon/{id}` and `GET /pokemon-species/{id}`, reusing the same cached `PokeApiClient` methods | `pokemon`, `species` |
 
 ## 3. `GET /pokemon` (list)
 
@@ -98,7 +98,7 @@ This page documents only the parts of PokeAPI the Poke App depends on: the endpo
 | Field | Notes |
 |---|---|
 | `height` | **Decimetres** (4 → 0.4 m) |
-| `weight` | **Hectograms** (60 → 6.0 kg). This is the spec's "mass". We store the raw value and convert for display. |
+| `weight` | **Hectograms** (60 → 6.0 kg). This is the spec's "mass". We keep the raw value in the domain and expose `weightKg` in the API. |
 | `abilities[]` | This is the spec's "skills". Keep `is_hidden` so the UI can mark hidden abilities. Sort by `slot`. |
 | `stats[]` | Always these six names: `hp`, `attack`, `defense`, `special-attack`, `special-defense`, `speed`. |
 | `sprites.front_default` | Small sprite for the US01 list. **May be `null`** for some forms. |
@@ -139,7 +139,7 @@ This page documents only the parts of PokeAPI the Poke App depends on: the endpo
 | Field | Our use |
 |---|---|
 | `genera[lang=en].genus` | **Category** for US01/US02 (e.g. "Mouse Pokémon"). Upstream text is passed through unchanged. |
-| `flavor_text_entries[lang=en]` | **Description** for US02. Pikachu has 33 English entries across game versions. We take the **latest English entry**, i.e. the last one in the array. |
+| `flavor_text_entries[lang=en]` | **Description** for US02. Pikachu has 33 English entries across game versions. We take the **latest English entry**, i.e. the last one in the array. The client keeps only that entry (and the English genus) before caching. |
 | `evolution_chain.url` | Next call for US02 |
 | `names[]`, `habitat`, `generation` | **Optional seed values for proprietary fields on import** (US03): `localizedName` from `ja`, `habitat` from `habitat.name`, `region` derived from `generation`. The user can then edit them freely. |
 | `is_legendary`, `is_mythical` | Candidates for default `tags` on import (`legendary`, `mythical`) |
@@ -168,7 +168,7 @@ This page documents only the parts of PokeAPI the Poke App depends on: the endpo
 
 The full Eevee chain has eight branches: vaporeon, jolteon, flareon, espeon, umbreon, leafeon, glaceon and sylveon.
 
-We flatten it with a depth-first walk into ordered stages:
+We flatten it with a breadth-first walk, so stages come out in stage order:
 
 ```json
 [
@@ -190,7 +190,7 @@ We flatten it with a depth-first walk into ordered stages:
 | `spriteUrl` | 01 | `pokemon.sprites.front_default` |
 | `imageUrl` | 02 | `pokemon.sprites.other.official-artwork.front_default`, falling back to `front_default` |
 | `category` | 01, 02 | `species.genera[en].genus` |
-| `weight`, `height` | 01, 02 | `pokemon.weight` (hg), `pokemon.height` (dm) |
+| `weightKg`, `heightM` | 01, 02 | `pokemon.weight` (hg) ÷ 10, `pokemon.height` (dm) ÷ 10. The domain keeps the raw units (`weightHectograms`, `heightDecimetres`), and `PokemonResponses` in the controller layer converts them. |
 | `abilities[] {name, hidden}` | 01, 02 | `pokemon.abilities[]` sorted by `slot` |
 | `types[]` | 01, 02 | `pokemon.types[]` sorted by `slot` |
 | `stats[] {name, value}` | 02 | `pokemon.stats[]` |
@@ -201,30 +201,32 @@ We flatten it with a depth-first walk into ordered stages:
 
 | Quirk | Handling |
 |---|---|
-| Flavor text contains `\n`, `\f` (form feed) and soft hyphens (`­`), and older entries are ALL CAPS ("POKéMON") | Replace `\f` and `\n` with spaces, drop `­`, collapse whitespace, and prefer the latest entry, which is mixed case |
+| Flavor text contains `\n`, `\f` (form feed) and soft hyphens (`\u00ad`), and older entries are ALL CAPS ("POKéMON") | Replace `\f` and `\n` with spaces, drop `\u00ad`, collapse whitespace, and prefer the latest entry, which is mixed case |
 | No English `genus` or flavor text (rare forms) | `category` / `description` = `null`; the UI shows "Unknown" |
 | `sprites.*` may be `null` | Nullable in DTOs; the UI shows a placeholder image |
-| 404 body is an ad-hoc JSON | The adapter maps the status to `PokemonNotFoundException` without depending on the body |
-| Timeouts, 5xx, connection errors | Map to `ExternalServiceUnavailableException` → our **503**. Use connect timeout 2 s and read timeout 5 s, with no retries on the request path. |
-| Large payloads (`/pokemon/{id}` is about 300 KB because of `moves`) | DTOs declare only the fields we use. Caching the *mapped* domain objects (not raw JSON) keeps Redis small. |
+| 404 body is an ad-hoc JSON | `PokeApiClient` maps the status to an empty result without reading the body, and `CatalogService` turns that into `PokemonNotFoundException` (404) |
+| Timeouts, 5xx, connection errors, malformed responses | Map to `ExternalServiceUnavailableException` (or `MalformedPokeApiResponseException`) → our **503**. Use connect timeout 2 s and read timeout 5 s, with no retries on the request path. |
+| Large payloads (`/pokemon/{id}` is about 300 KB because of `moves`) | DTOs declare only the fields we use, and species responses are cut down to the English genus and latest English flavor text before caching. Measured in Redis, a Pokemon (1.2 KB), its species (0.5 KB) and its chain (0.9 KB) take about 2.6 KB together, against about 350 KB of raw upstream JSON. |
 | Forms (id ≥ 10001) | Always follow `species.url`; never assume species id = pokemon id |
 | One list page = 1 + 2 × size upstream calls | Parallelize on virtual threads; cache per `pokemon` and `species` so neighbouring pages reuse entries; cap `size` at 50 |
 | Names | Lowercase and trim; reject anything outside `[a-z0-9-]` with 400 before calling upstream |
 
 ## 9. Test fixtures
 
-WireMock fixtures live in `api/src/test/resources/pokeapi/` and are trimmed real responses:
+WireMock fixtures live in `api/src/test/resources/pokeapi/`. They are real responses trimmed to the fields the client reads:
 
 | File | Purpose |
 |---|---|
-| `pokemon-list-offset0-limit3.json` | List mapping and pagination maths |
-| `pokemon-25.json` / `pokemon-species-25.json` / `evolution-chain-10.json` | Pikachu happy path (linear chain pichu → pikachu → raichu) |
-| `pokemon-133.json` / `pokemon-species-133.json` / `evolution-chain-67.json` | Eevee, with a branching chain |
-| `pokemon-10001.json` | A form whose species id differs (→ 386) |
-| *stubs* | 404 (`{"status":404,"message":"Not Found"}`), 500, delayed response (timeout) |
+| `pokemon-list-offset24-limit2.json` | A list page (pikachu, raichu) for mapping and pagination maths (`count` 1351) |
+| `pokemon-25.json`, `pokemon-species-25.json` | Pikachu: sprite, artwork, stats, hidden ability, English and Japanese genus, oldest and latest English flavor text |
+| `pokemon-26.json`, `pokemon-species-26.json` | Raichu, the second entry of the list page |
+| `pokemon-133.json`, `pokemon-species-133.json`, `evolution-chain-67.json` | Eevee with its branching chain |
+| `evolution-chain-10.json` | Pikachu's linear chain (pichu → pikachu → raichu) |
+| `pokemon-10001.json`, `pokemon-species-386.json` | An alternate form (deoxys-attack) whose species id differs |
+| *inline stubs* | 404 (`{"status":404,"message":"Not Found"}`), 500, and a delayed response for the read timeout |
 
-Refresh a fixture with:
+To refresh a fixture, re-download it and keep only the fields listed in sections 4–6, e.g.:
 
 ```bash
-curl -sL https://pokeapi.co/api/v2/pokemon/25/ | jq '{id,name,height,weight,abilities,types,stats,sprites:{front_default:.sprites.front_default,other:{"official-artwork":.sprites.other["official-artwork"]}},species}' > pokemon-25.json
+curl -sL https://pokeapi.co/api/v2/pokemon/25/ | jq '{id,name,height,weight,abilities,types,stats,sprites:{front_default:.sprites.front_default,other:{"official-artwork":{front_default:.sprites.other["official-artwork"].front_default}}},species}' > pokemon-25.json
 ```

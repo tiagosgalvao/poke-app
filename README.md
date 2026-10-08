@@ -44,6 +44,8 @@ The project shows how to build a robust backend service with **Clean Architectur
 
 Prerequisites: Docker. For local development you also need JDK 25 and Node 24.
 
+**IDE:** open the repository root (`poke-app/`) in IntelliJ IDEA. The root `settings.gradle.kts` includes `api/` as a composite build, so Gradle is imported automatically. Set Gradle JVM to 25 if prompted.
+
 ```bash
 cp .env.example .env
 
@@ -64,16 +66,16 @@ Once the Dockerfiles are added (Phase 4–5), the whole stack runs with `docker 
 - [API README](api/README.md): setup, configuration and what each backend dependency is for
 - [Web README](web/README.md): scripts, structure and what each frontend library is for
 - [Architecture](docs/ARCHITECTURE.md): layers, data model, API contract, caching, auth, testing
-- [Decision log](docs/DECISIONS.md): why each technical choice was made (ADR-style, D1–D19)
+- [Decision log](docs/DECISIONS.md): why each technical choice was made (ADR-style, D1–D20)
 - [PokeAPI reference](docs/POKEAPI.md): upstream endpoints, mapping and quirks
 - [Roadmap / next steps](docs/ROADMAP.md): numbered tasks, one commit each
-- [Conventions](docs/CONVENTIONS.md): commit message format
+- [Conventions](docs/CONVENTIONS.md): commit format, code style and best practices
 - [CLAUDE.md](CLAUDE.md): working agreement for AI-assisted development
 
 ## Repository layout
 
 ```
-api/    Spring Boot service (hexagonal: domain · application · adapter · config)
+api/    Spring Boot service (feature-first: catalog · pokedex · identity, each with domain · service · client/repository · controller)
 web/    React SPA
 docs/   design docs
 ```

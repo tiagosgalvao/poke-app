@@ -14,10 +14,11 @@ The design is in `docs/ARCHITECTURE.md` and the reasons behind it are in `docs/D
 ## Layout
 
 ```
-api/   Spring Boot 4.1 · Java 25 · Gradle Kotlin DSL   (package root: com.poke)
+api/   Spring Boot 4.1 · Java 25 · Gradle Kotlin DSL   (package root: com.poke, feature-first)
 web/   React 19 · TypeScript · Vite 8 · Tailwind 4
-docs/  ARCHITECTURE.md (design), DECISIONS.md (decision log), POKEAPI.md (upstream reference), CONVENTIONS.md (commit rules), ROADMAP.md (numbered tasks), GENAI.md (later)
+docs/  ARCHITECTURE.md (design), DECISIONS.md (decision log), POKEAPI.md (upstream reference), CONVENTIONS.md (commits, code style, best practices), ROADMAP.md (numbered tasks), GENAI.md (later)
 docker-compose.yml   postgres:17 + redis:8 (api/web services added later)
+settings.gradle.kts  composite build including api/, so IDEs import Gradle from the repo root
 ```
 
 ## Commands
@@ -29,7 +30,7 @@ docker compose up -d postgres redis
 # api (run from api/)
 ./gradlew build              # compile + all tests + JaCoCo report (needs Docker for Testcontainers)
 ./gradlew test --tests '*ArchitectureTest'   # fast architecture check
-./gradlew test --tests 'com.poke.application.*'   # a single package
+./gradlew test --tests 'com.poke.catalog.*'   # a single feature
 ./gradlew bootRun            # http://localhost:8080, Swagger UI at /swagger-ui.html
 # coverage report: api/build/reports/jacoco/test/html/index.html
 
@@ -43,14 +44,17 @@ npm run build                # tsc -b + vite build
 
 ## Backend architecture rules (enforced by `ArchitectureTest`)
 
-- `domain` is pure Java. It has no Spring, JPA, Jackson or servlet imports, and it holds invariants and domain exceptions.
-- `application` depends only on `domain`. It holds `port.in` (use-case interfaces), `port.out` (what the use cases need) and `service` (the implementations).
-  - Services are **plain classes**, not annotated with `@Service`. They are wired as `@Bean`s in `config`.
-- `adapter.in.web` holds controllers, request/response records, mappers and the `GlobalExceptionHandler`. It must not import `adapter.out`.
-- `adapter.out.{pokeapi,persistence,security}` implement the `port.out` interfaces.
-  - JPA `@Entity` classes live only in `adapter.out.persistence`, and are mapped to and from domain objects.
-  - `@Cacheable` lives in the PokeAPI adapter.
-- `config` handles wiring only. Nothing depends on it.
+Packages are **feature-first** (`com.poke.<feature>`), with the usual Spring layers inside each feature. See `docs/ARCHITECTURE.md` §4 and D4.
+
+- **Features:** `catalog` (US01–US02, PokeAPI), `pokedex` (US03–US04, Postgres), `identity` (users and auth), plus a `shared` kernel (`shared.exception`, `shared.pagination`, `shared.validation`, `shared.config`).
+- **`<feature>.domain`** is pure Java: no Spring, JPA, Jackson or servlet imports. It holds business types, invariants, domain exceptions, and the interfaces the feature needs from outside (e.g. `PokemonCatalog`, later `LocalPokemonRepository`).
+- **`<feature>.service`** holds `@Service` classes (and `@Transactional` from Phase 2). They depend on `domain` only, never on `controller`, `client`, `repository` or `entity`.
+- **`<feature>.client`** holds outbound HTTP (RestClient, DTOs, mapping, `@Cacheable`) and implements domain interfaces.
+- **`<feature>.repository` / `<feature>.entity`** hold Spring Data JPA repositories and `@Entity` classes, mapped to and from domain objects, and implement domain interfaces.
+- **`<feature>.controller`** holds REST controllers and request/response records. Controllers call services only, with no logic and no `client`, `repository` or `entity` imports.
+- **Enums** go in an `enums` package inside the feature or layer that owns them (e.g. `catalog.client.enums`).
+- **`shared`** depends on no feature. Features never form dependency cycles, and they talk to each other only through `service` classes.
+- **Dependency inversion is for outbound I/O only.** No inbound use-case interfaces.
 - If you need to break a rule, stop and discuss it. Don't weaken `ArchitectureTest`.
 
 ## Conventions
@@ -70,9 +74,10 @@ npm run build                # tsc -b + vite build
     - 409: duplicate or stale `version`
     - 503: PokeAPI down
     - 500: generic, with no internals leaked
-- **Validation:**
-  - Bean Validation on request DTOs covers shape.
-  - Domain constructors and methods cover business invariants.
+- **Validation (D20):**
+  - Domain constructors guard invariants for data from any source, including upstream PokeAPI data. They use `shared.validation.Require` and value objects such as `PokemonKey`.
+  - Request bodies use Bean Validation (`@Valid` + `@NotBlank`/`@Size`/`@Pattern`) at the controller, from Phase 2.
+  - Revisit D20 when Phase 2 lands.
 - **Persistence:**
   - Flyway owns the schema, in `api/src/main/resources/db/migration/V{n}__desc.sql`. Never edit a migration that has been committed; add a new one.
   - `ddl-auto` stays `validate`.
@@ -80,7 +85,7 @@ npm run build                # tsc -b + vite build
   - Configuration comes from env vars with defaults in `application.yml`, under the `poke.*` prefix.
   - Secrets come only from env. Never commit a real `.env`.
 - **Web:**
-  - Feature folders live under `src/features/{catalog,local,auth}`.
+  - Feature folders live under `src/features/{catalog,pokedex,auth}`, mirroring the backend features.
   - Server state goes through TanStack Query hooks. Don't keep API data in Zustand.
   - Auth state lives in the Zustand store.
   - Forms use react-hook-form + zod, with schemas that mirror the API rules.
@@ -89,8 +94,8 @@ npm run build                # tsc -b + vite build
 
 ## Workflow
 
-- **TDD:** write or adjust the failing test first, then the code. Every new use case, adapter and controller gets tests:
-  - unit tests for domain and application;
+- **TDD:** write or adjust the failing test first, then the code. Every new domain type, service, client/repository and controller gets tests:
+  - unit tests for domain and services;
   - `@WebMvcTest` for controllers;
   - WireMock for PokeAPI;
   - `@DataJpaTest` + Testcontainers for persistence.
@@ -100,4 +105,5 @@ npm run build                # tsc -b + vite build
   - For npm, use `npm install --before=<date two weeks ago>`.
   - Gradle versions are pinned in `api/build.gradle.kts`.
 - **Git:** do **not** commit or push unless explicitly asked. The user commits in parts. Staging is fine when asked.
+- **Code style and best practices:** follow `docs/CONVENTIONS.md`. That means no redundant comments, no magic numbers or strings, static imports for constants and enums, enums in an `enums` package, and braces on every `if`.
 - **Commits:** follow `docs/CONVENTIONS.md`. That means one commit per roadmap task, with the message `<task id> <short description>`, e.g. `0.1 monorepo layout`.

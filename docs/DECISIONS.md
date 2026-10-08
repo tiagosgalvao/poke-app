@@ -9,8 +9,8 @@ Architecture Decision Records (ADR-style) for the Poke App. Each decision has a 
 | [D1](#d1-monorepo) | Monorepo (`api/` + `web/`) | Repo | Accepted |
 | [D2](#d2-spring-boot-41--java-25) | Spring Boot 4.1 + Java 25 | Backend | Accepted |
 | [D3](#d3-gradle-kotlin-dsl) | Gradle Kotlin DSL | Build | Accepted |
-| [D4](#d4-hexagonal--clean-architecture-enforced-by-archunit) | Hexagonal / Clean Architecture, enforced by ArchUnit | Backend | Accepted |
-| [D5](#d5-use-cases-as-plain-classes-wired-in-config) | Use cases as plain classes wired in `config` | Backend | Accepted |
+| [D4](#d4-feature-first-packages-with-clean-layers-inside) | Feature-first packages with clean layers inside, enforced by ArchUnit | Backend | Accepted |
+| [D5](#d5-services-as-service-beans-dependency-inversion-only-for-outbound-io) | Services as `@Service` beans; dependency inversion only for outbound I/O | Backend | Accepted |
 | [D6](#d6-postgresql--flyway) | PostgreSQL + Flyway | Data | Accepted |
 | [D7](#d7-pokeapi-id-as-the-local-primary-key) | PokeAPI id as the local primary key | Data | Accepted |
 | [D8](#d8-optimistic-locking) | Optimistic locking (`version`) | Data | Accepted |
@@ -25,6 +25,7 @@ Architecture Decision Records (ADR-style) for the Poke App. Each decision has a 
 | [D17](#d17-wiremock-for-pokeapi-in-tests) | WireMock for PokeAPI in tests | Testing | Accepted |
 | [D18](#d18-dependencies-at-least-2-weeks-old) | Dependencies at least 2 weeks old | Supply chain | Accepted |
 | [D19](#d19-virtual-threads-enabled-globally) | Virtual threads enabled globally | Backend / perf | Accepted |
+| [D20](#d20-validation-domain-guards-for-upstream-data-bean-validation-for-requests) | Validation: domain guards for upstream data, Bean Validation for requests | Backend | Accepted (reassess in Phase 2) |
 
 ---
 
@@ -59,25 +60,42 @@ Architecture Decision Records (ADR-style) for the Poke App. Each decision has a 
   - Versions pinned as `val`s at the top of the file.
 - **Alternatives considered:** Groovy DSL, which is less type-safe, and Maven, which is more verbose.
 
-### D4. Hexagonal / Clean Architecture, enforced by ArchUnit
+### D4. Feature-first packages with clean layers inside
 
-- **Context:** the spec evaluates Clean Architecture and requires the business layer to be "independent from both the API and the data access components".
-- **Decision:** the `domain` → `application` (ports + services) → `adapter` (in/out) → `config` layering.
+- **Context:**
+  - The spec evaluates Clean Architecture and requires the business layer to be "independent from both the API and the data access components".
+  - Clean Architecture only requires the **dependency rule**: business rules independent of frameworks, UI and data access, with dependencies pointing inward. Any package layout that respects it qualifies.
+  - The codebase is small, and reviewers should find a feature in one place, named the way most Spring projects name things.
+- **Decision:**
+  - Package by feature (bounded context): `catalog`, `pokedex`, `identity`, plus a small `shared` kernel (`exception`, `pagination`, `validation`, `config`).
+  - Inside each feature, use the familiar Spring package names: `domain`, `service`, `client`, `repository`, `entity`, `controller`. The flow is controller → service → client/repository.
+  - `ArchitectureTest` (ArchUnit) enforces:
+    - the domain is framework-free (no Spring, JPA or Jackson);
+    - services never depend on controllers, clients, repositories or entities;
+    - controllers only call services;
+    - clients and repositories never depend on controllers or services;
+    - `shared` depends on no feature;
+    - features have no cycles.
 - **Consequences:**
-  - `ArchitectureTest` turns the dependency rule into failing tests:
-    - no Spring, JPA or Jackson in `domain` or `application`;
-    - `adapter.in` never imports `adapter.out`.
-  - There's more mapping code (DTO ↔ domain ↔ entity). That's the price of independence.
-- **Alternatives considered:** classic layered packages (`controller` / `service` / `repository`). Simpler, but entities leak everywhere and the rule isn't enforceable.
+  - Each feature is self-contained and reads like the business.
+  - The domain stays unit-testable without Spring.
+  - There's some mapping code (DTO ↔ domain ↔ entity). That's the price of keeping the domain independent.
+- **Alternatives considered:**
+  - **Hexagonal ports & adapters** packaged by technical layer (`domain`, `application/port/in|out`, `adapter/in|out`, `config`): valid Clean Architecture, but one feature ends up spread across many package trees, with jargon-heavy names and single-implementation use-case interfaces. That's ceremony for a project this size.
+  - **Plain layered packages** (`controller/service/repository` at the top level): simpler, but features are scattered and the domain isn't protected.
 
-### D5. Use cases as plain classes wired in `config`
+### D5. Services as `@Service` beans; dependency inversion only for outbound I/O
 
-- **Context:** `@Service` on a use case makes `application` depend on Spring.
-- **Decision:** services are plain Java classes, instantiated as `@Bean`s in `config`.
+- **Context:** Clean Architecture needs the business layer to stay independent of I/O. It doesn't need an interface on every boundary.
+- **Decision:**
+  - Services are ordinary `@Service` beans, and controllers call them directly. There are no inbound use-case interfaces.
+  - Outbound I/O goes through a **domain interface** that the service depends on: `PokemonCatalog`, later `LocalPokemonRepository`. `client` (RestClient) or `repository` (Spring Data JPA) implements it.
 - **Consequences:**
-  - Unit tests need no Spring context and stay fast.
-  - Wiring is explicit, so it's visible in one place.
-- **Alternatives considered:** component scanning with `@Service`. Less code, but it breaks D4.
+  - Fewer files. Services are still unit-tested by mocking the outbound interface.
+  - The service layer depends on Spring stereotypes (`@Service`, later `@Transactional`). That's a deliberate trade-off for a small codebase.
+- **Alternatives considered:**
+  - Plain classes wired as `@Bean`s in a `config` package: keeps the service layer Spring-free, but adds wiring code with little benefit here.
+  - Inbound use-case interfaces: decoupling with only one implementation, so no real benefit.
 
 ### D6. PostgreSQL + Flyway
 
@@ -120,9 +138,10 @@ Architecture Decision Records (ADR-style) for the Poke App. Each decision has a 
   - PokeAPI asks consumers to cache.
   - The data is effectively static (upstream `max-age=86400`).
 - **Decision:**
-  - `@Cacheable` in the PokeAPI adapter, backed by Redis 8 (JSON values, 24 h TTL).
-  - Cache per upstream resource (`pokemon`, `species`, `evolution-chain`, `pokemon-page`).
-  - A `CacheErrorHandler` falls back to PokeAPI when Redis is down.
+  - `@Cacheable` on the PokeAPI client methods, backed by Redis 8 with a 24 h TTL.
+  - Cache per upstream resource (`pokemon`, `species`, `evolution-chain`, `pokemon-page`). The cached values are the trimmed upstream DTOs, stored as JSON with one typed serializer per cache, so no class names are stored in Redis.
+  - 404s are not cached (`unless = "#result == null"`).
+  - Short Redis timeouts (500 ms) plus a `LoggingCacheErrorHandler` mean a Redis outage only logs and falls back to PokeAPI.
 - **Consequences:**
   - Shared across instances.
   - Visible in the demo (`redis-cli KEYS '*'`).
@@ -136,7 +155,7 @@ Architecture Decision Records (ADR-style) for the Poke App. Each decision has a 
 - **Consequences:**
   - Straightforward, debuggable code.
   - Easy to test with WireMock.
-  - Upstream errors map to domain exceptions (404 → not found; timeout or 5xx → 503).
+  - Upstream errors map to domain exceptions (404 → not found; timeout, 5xx or a malformed response → 503).
 - **Alternatives considered:**
   - WebFlux `WebClient`: reactive types spread through the code.
   - OpenFeign: an extra dependency for a handful of endpoints.
@@ -211,7 +230,7 @@ Architecture Decision Records (ADR-style) for the Poke App. Each decision has a 
 ### D17. WireMock for PokeAPI in tests
 
 - **Context:**
-  - Adapter tests must cover mapping, 404, 5xx and timeouts.
+  - PokeAPI client tests must cover mapping, 404, 5xx and timeouts.
   - CI must not depend on the live PokeAPI.
 - **Decision:** WireMock serving trimmed real responses (fixtures in `src/test/resources/pokeapi/`).
 - **Consequences:**
@@ -249,6 +268,37 @@ Architecture Decision Records (ADR-style) for the Poke App. Each decision has a 
   - Stack traces and debugging stay normal.
   - `ThreadLocal`-heavy libraries create one copy per virtual thread. That's fine for our stack, but worth knowing.
 - **Alternatives considered:**
-  - **WebFlux / `WebClient` (reactive):** non-blocking, but `Mono`/`Flux` spreads through adapters and tests and is harder to read and explain.
+  - **WebFlux / `WebClient` (reactive):** non-blocking, but `Mono`/`Flux` spreads through clients and tests and is harder to read and explain.
   - **A tuned platform thread pool (`ThreadPoolTaskExecutor`):** works, but it needs pool sizing and invites thread starvation under load.
   - **Sequential calls with caching only:** simplest, but the first load of every page would be slow.
+
+### D20. Validation: domain guards for upstream data, Bean Validation for requests
+
+- **Status:** Accepted. **Reassess when Phase 2 lands**, the first feature that takes request bodies.
+- **Context:**
+  - Catalog domain records (`PokemonSummary`, `PokemonDetail`, `Ability`, `Stat`, `EvolutionStage`) and `Page`/`PageRequest` validate themselves in their constructors through `shared.validation.Require` (`text`, `positive`, `nonNegative`, `copy`).
+  - The obvious alternative is Jakarta Bean Validation annotations (`@NotBlank`, `@Positive`, `@Min`/`@Max`).
+  - Annotations only *declare* rules. A `Validator` must run them, and Spring only does that automatically at the **controller boundary**: built-in method validation for `@RequestParam`/`@PathVariable`, and `@Valid` for request bodies.
+  - Our data reaches the domain in two different ways:
+    - **From upstream:** `PokeApiPokemonCatalog` maps PokeAPI responses into domain records. No controller and no validator are involved.
+    - **From users:** query parameters and path variables today (`page`, `size`, `idOrName`); JSON request bodies from Phase 2 (create, update, patch, sync).
+- **Decision:** keep both mechanisms, each where it actually runs.
+  - **Domain guards (`Require`, `PokemonKey`)** stay in constructors. They protect the domain whatever the entry point is, including upstream data and future sync jobs. The domain also stays framework-free, with no `jakarta.validation` dependency, and testable with plain JUnit.
+  - **Bean Validation** is the tool for **request DTOs** from Phase 2: `@Valid` plus `@NotBlank`/`@Size`/`@Pattern`, reported as a 400 ProblemDetail with a `fieldErrors` extension.
+  - **Query and path parameters** stay as they are. `PageRequest` already rejects a bad `page`/`size`, and `PokemonKey` normalizes and validates `idOrName`, both with a correct 400.
+- **Why not switch the catalog records to annotations now:**
+  - Nothing would invoke a validator on objects built from upstream data, so the annotations would be ignored.
+  - User-facing behaviour is already correct (`size=500` → 400). Rewriting it would change how the check is written, not what anyone sees, at the cost of about 15 files and a dozen tests.
+- **Known trade-off:**
+  - If PokeAPI ever sent invalid data (a blank name, a negative weight), the domain guard throws `DomainValidationException`, which maps to **400**, although the fault is upstream. Ideally it would be a **503**.
+  - It's very unlikely and the request fails either way, but it's the main reason to revisit this.
+  - Possible fixes:
+    - (a) make the catalog records plain mirrors of upstream data, without guards;
+    - (b) translate guard failures inside the PokeAPI client into `MalformedPokeApiResponseException` (503).
+- **Reassess in Phase 2 by answering:**
+  1. Do request DTOs with Bean Validation make some domain guards redundant? Keep only rules that must hold however data arrives, e.g. "re-sync never overwrites proprietary fields" and "a stale `version` is a conflict".
+  2. Should `page`/`size` move to `@PositiveOrZero`/`@Min`/`@Max` on the controller, for one consistent `fieldErrors` format across all 400s?
+  3. Should upstream mapping failures become 503 (option a or b above)?
+- **Alternatives considered:**
+  - **Bean Validation everywhere, calling `Validator.validate(...)` manually in the client:** it works, but it adds a framework dependency to the domain path and ceremony for read-only data.
+  - **Domain guards everywhere, with no Bean Validation:** request DTOs would lose standard, declarative, per-field error messages.
