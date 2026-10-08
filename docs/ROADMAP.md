@@ -34,7 +34,7 @@ All Phase 1 code lives in `com.poke.catalog` and `com.poke.shared` ([D4](DECISIO
 - [x] **2.5 sync from pokeapi**: `SyncBatch` (1–50 distinct positive ids, list or range), `LocalPokemonService.sync` creating or refreshing each Pokemon without touching proprietary data, unknown ids reported as failed, all-or-nothing on a PokeAPI outage, and a `SyncSummary`
 - [x] **2.6 local pokemon endpoints**: `LocalPokemonController` (GET list/one, POST import, PUT, PATCH, DELETE, POST sync), request DTOs with Bean Validation, ProblemDetail 409 for conflicts and 400 with `fieldErrors` ([D20](DECISIONS.md#d20-validation-domain-guards-for-upstream-data-bean-validation-for-requests) reassessed), and a shared `Measures` helper, with `@WebMvcTest`
 - [x] **2.7 optimistic locking**: a stale `version` (service check) and a lost update between two concurrent writers (JPA `@Version`, translated by `JpaLocalPokemonRepository`) both surface as `StaleVersionException` → 409, with a two-transaction test and an MVC test
-- [ ] **2.8 local pokemon seed**: `V2__seed_local_pokemon.sql` with about 20 Pokemon, including proprietary data
+- [x] **2.8 local pokemon seed**: `V2__seed_local_pokemon.sql` with 20 Kanto Pokemon (real PokeAPI data), 8 of them with proprietary data (Japanese name, region, habitat, tags, notes), plus seed-safe migration and concurrency tests
 
 ## Phase 3: Authentication
 
