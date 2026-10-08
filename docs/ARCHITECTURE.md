@@ -79,7 +79,7 @@ poke-app/
 ├── api/                  Spring Boot 4.1 · Java 25 · Gradle Kotlin DSL · feature-first packages
 ├── web/                  React 19 · TypeScript · Vite 8
 ├── docs/                 this file, DECISIONS.md, POKEAPI.md, CONVENTIONS.md, ROADMAP.md, GENAI.md (later)
-├── docker-compose.yml    postgres + redis (+ api + web once Dockerfiles land)
+├── docker-compose.yml    postgres + redis + api (+ web from 5.7)
 ├── settings.gradle.kts   composite build including api/, so IDEs import Gradle from the repo root
 ├── .env.example
 └── CLAUDE.md             working agreement for AI-assisted development

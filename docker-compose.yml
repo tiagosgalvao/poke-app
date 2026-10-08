@@ -27,7 +27,26 @@ services:
       timeout: 3s
       retries: 10
 
-  # api and web services are added once their Dockerfiles exist (see docs/ARCHITECTURE.md, "Next steps").
+  api:
+    build: ./api
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-poke}
+      DB_USERNAME: ${POSTGRES_USER:-poke}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-poke}
+      REDIS_HOST: redis
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-env-this-is-only-a-local-dev-secret-32b}
+      JWT_TTL: ${JWT_TTL:-2h}
+      CACHE_TTL: ${CACHE_TTL:-24h}
+      POKEAPI_BASE_URL: ${POKEAPI_BASE_URL:-https://pokeapi.co/api/v2}
+    ports:
+      - "${API_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # the web service is added with its Dockerfile (task 5.7).
 
 volumes:
   postgres-data:

@@ -17,7 +17,7 @@ The design is in `docs/ARCHITECTURE.md` and the reasons behind it are in `docs/D
 api/   Spring Boot 4.1 · Java 25 · Gradle Kotlin DSL   (package root: com.poke, feature-first)
 web/   React 19 · TypeScript · Vite 8 · Tailwind 4
 docs/  ARCHITECTURE.md (design), DECISIONS.md (decision log), POKEAPI.md (upstream reference), CONVENTIONS.md (commits, code style, best practices), ROADMAP.md (numbered tasks), GENAI.md (later)
-docker-compose.yml   postgres:17 + redis:8 (api/web services added later)
+docker-compose.yml   postgres:17 + redis:8 + api (web added in 5.7)
 settings.gradle.kts  composite build including api/, so IDEs import Gradle from the repo root
 ```
 

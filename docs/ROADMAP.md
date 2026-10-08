@@ -53,7 +53,7 @@ All Phase 3 code lives in `com.poke.identity`.
 - [x] **4.1 end-to-end tests**: `PokeAppEndToEndTest`, a `@SpringBootTest` through the real security chain with Testcontainers (Postgres, Redis) and WireMock: register → login → 401 without a token → import → 409 duplicate → patch → 409 stale version → 400 `fieldErrors` → sync (refreshed and failed) → delete → 404
 - [x] **4.2 coverage review**: filled the gaps the JaCoCo report showed (403 handler, incomplete sync request, unexpected fetch failure, `User` null inputs) and added a coverage gate to `check` (95% line, 90% branch; currently about 99% / 97%)
 - [x] **4.3 api dockerfile**: multi-stage (JDK build with a Gradle cache mount, JRE runtime), extracted Spring Boot layers, non-root `poke` user, `/actuator/health` healthcheck, `.dockerignore`, and a fixed `poke-api.jar` name
-- [ ] **4.4 api in compose**: an `api` service that depends on healthy postgres and redis
+- [x] **4.4 api in compose**: an `api` service built from `api/Dockerfile`, configured through the same env vars as `.env.example`, waiting for healthy postgres and redis
 
 ## Phase 5: Frontend
 
