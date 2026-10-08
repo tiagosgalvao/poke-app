@@ -20,6 +20,16 @@ npm run build      # type-check + production build into dist/
 npm run preview    # serve dist/ locally
 ```
 
+## Docker
+
+`web/Dockerfile` builds the app with Node 24 and serves `dist/` from `nginx:stable-alpine`. `nginx.conf` does three things:
+
+- proxies `/api/` to the `api` compose service, so the browser talks to a single origin;
+- caches the hashed files under `/assets/` for a year;
+- falls back to `index.html` for any other path, so deep links such as `/my-pokedex` work on reload.
+
+From the repo root, `docker compose up --build` serves it on http://localhost:3000 (override with `WEB_PORT`).
+
 ## Structure
 
 ```

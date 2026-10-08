@@ -46,7 +46,13 @@ services:
       redis:
         condition: service_healthy
 
-  # the web service is added with its Dockerfile (task 5.7).
+  web:
+    build: ./web
+    ports:
+      - "${WEB_PORT:-3000}:80"
+    depends_on:
+      api:
+        condition: service_healthy
 
 volumes:
   postgres-data:

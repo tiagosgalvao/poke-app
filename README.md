@@ -49,10 +49,10 @@ Prerequisites: Docker. For local development you also need JDK 25 and Node 24.
 ```bash
 cp .env.example .env
 
-# backend in Docker: Postgres, Redis and the API on http://localhost:8080
-docker compose up -d --build api
+# everything in Docker: web on http://localhost:3000, API on http://localhost:8080
+docker compose up --build
 
-# or run only the infrastructure and start the API from your IDE / Gradle
+# or run only the infrastructure and start the API and web locally
 docker compose up -d postgres redis
 
 # api
@@ -61,8 +61,6 @@ cd api && ./gradlew bootRun          # http://localhost:8080  (Swagger: /swagger
 # web (another terminal)
 cd web && npm install && npm run dev # http://localhost:5173
 ```
-
-Once the web image is added (task 5.7), the whole stack runs with `docker compose up --build`.
 
 ## Documentation
 

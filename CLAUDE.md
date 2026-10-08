@@ -17,14 +17,17 @@ The design is in `docs/ARCHITECTURE.md` and the reasons behind it are in `docs/D
 api/   Spring Boot 4.1 · Java 25 · Gradle Kotlin DSL   (package root: com.poke, feature-first)
 web/   React 19 · TypeScript · Vite 8 · Tailwind 4
 docs/  ARCHITECTURE.md (design), DECISIONS.md (decision log), POKEAPI.md (upstream reference), CONVENTIONS.md (commits, code style, best practices), ROADMAP.md (numbered tasks), GENAI.md (later)
-docker-compose.yml   postgres:17 + redis:8 + api (web added in 5.7)
+docker-compose.yml   postgres:17 + redis:8 + api + web (nginx on :3000, proxies /api to the api service)
 settings.gradle.kts  composite build including api/, so IDEs import Gradle from the repo root
 ```
 
 ## Commands
 
 ```bash
-# infrastructure for local dev
+# whole stack in Docker (web http://localhost:3000, api http://localhost:8080)
+docker compose up --build
+
+# infrastructure only, for local dev
 docker compose up -d postgres redis
 
 # api (run from api/)
