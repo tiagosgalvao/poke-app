@@ -26,7 +26,7 @@ Architecture Decision Records (ADR-style) for the Poke App. Each decision has a 
 | [D18](#d18-dependencies-at-least-2-weeks-old) | Dependencies at least 2 weeks old | Supply chain | Accepted |
 | [D19](#d19-virtual-threads-enabled-globally) | Virtual threads enabled globally | Backend / perf | Accepted |
 | [D20](#d20-validation-domain-guards-for-upstream-data-bean-validation-for-requests) | Validation: domain guards for upstream data, Bean Validation for requests | Backend | Accepted (reassess in Phase 2) |
-| [D21](#d21-mapstruct-for-response-and-entity-to-domain-mappings) | MapStruct for response and entity → domain mappings | Backend | Accepted |
+| [D21](#d21-mapstruct-for-response-and-entity--domain-mappings) | MapStruct for response and entity → domain mappings | Backend | Accepted |
 
 ---
 
@@ -175,6 +175,21 @@ Architecture Decision Records (ADR-style) for the Poke App. Each decision has a 
   - HTTP Basic: the SPA would have to store credentials.
   - Sessions + CSRF: stateful.
   - A full OAuth provider: overkill.
+- **Reassessed (task 6.13):**
+  - **The question:** the controllers have no `@PreAuthorize`, so how is the bearer token validated, and does any token simply pass?
+  - **The answer:** validation happens in the filter chain, before any controller. `BearerTokenAuthenticationFilter` hands the token to the `NimbusJwtDecoder` from `JwtConfig`, which checks the HS256 signature, the pinned algorithm and `exp`/`nbf`. The URL rules in `SecurityConfig` then require authentication for every write.
+    - **What passes:** any token that is validly signed and unexpired. With one role, that is the intended policy.
+    - **Checked against the running stack:** a forged `alg: none` token and a garbage token both get 401, including on public `GET`s.
+  - **The decision:** keep the URL-based rules, and don't enable method security. Annotations would only repeat the one rule, and unused ones would mislead. The remaining gaps are accepted and documented in [ARCHITECTURE.md §8](ARCHITECTURE.md#known-limits-accepted-for-this-exercise):
+    - no roles;
+    - the issuer isn't validated;
+    - a shared dataset with no ownership;
+    - no revocation;
+    - a symmetric key.
+  - **Revisit when:**
+    - a second role appears (then a role claim + `@EnableMethodSecurity` + `@PreAuthorize` on services);
+    - data becomes per-user (then ownership checks);
+    - an external identity provider is introduced (then asymmetric keys / JWKS, plus issuer and audience validation).
 
 ### D12. RFC 9457 ProblemDetail errors
 
@@ -215,9 +230,15 @@ Architecture Decision Records (ADR-style) for the Poke App. Each decision has a 
 - **Consequences:**
   - No hand-written caching or loading flags.
   - No duplicated state.
+- **Why Zustand for the session:**
+  - The auth state is three fields plus two actions.
+  - Zustand gives a global store with no provider and selector-based re-renders, so only the components reading `username` re-render when it changes.
+  - The `persist` middleware saves the session in one line.
+  - The store is also readable outside React (`useAuthStore.getState()`). That's how the API client gets the token and logs out on a 401, with no hook gymnastics.
+- **Where it's used:** `features/auth/authStore.ts`. The details are in [ARCHITECTURE.md §9](ARCHITECTURE.md#auth-state-with-zustand).
 - **Alternatives considered:**
-  - Redux Toolkit / RTK Query: heavier.
-  - Context only: re-render issues and manual caching.
+  - Redux Toolkit / RTK Query: heavier, with reducers, actions and a provider for three fields.
+  - Context only: every consumer re-renders on each change, persistence has to be hand-written, and the API client can't read it outside React.
 
 ### D16. nginx reverse proxy for `/api`
 

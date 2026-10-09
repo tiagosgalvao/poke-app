@@ -96,6 +96,17 @@ All Phase 3 code lives in `com.poke.identity`.
   - how the AI's autonomy is kept in check.
 
   CLAUDE.md now spells out the review-before-commit rules.
+- [x] **6.13 document jwt validation and authorization**: docs only. They cover:
+  - where the bearer token is validated (the resource-server filter and `NimbusJwtDecoder`: signature, pinned HS256, expiry), before any controller;
+  - why there is no `@PreAuthorize` (one role, so the URL rules are the policy);
+  - the accepted limits and how to lift them.
+
+  Recorded in ARCHITECTURE §8 and D11 (reassessed), with a GenAI table row and README links. The same task also documents the browser side of auth: the Zustand session store (ARCHITECTURE §9, D15): what it holds, how it feeds the bearer token and the 401 → logout into the API client, who reads it, and why API data stays in TanStack Query.
+  - It also covers the pre-submission review against the spec:
+    - `docs/REQUIREMENTS-AND-SOLUTIONS.md` maps every requirement to its solution and evidence, linked from the README;
+    - the broken D21 anchors are fixed;
+    - leftover "Phase N / later" wording is removed from the present-tense docs;
+    - the README screenshots are retaken, so visitors no longer see the *My Pokedex* link. The 401 for forged, `alg: none` and garbage tokens was checked against the running stack.
 
 ## Demo script (for the presentation)
 

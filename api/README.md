@@ -61,8 +61,8 @@ com.poke
 │   ├── service/        CatalogService
 │   ├── client/         PokeApiClient, PokeApiPokemonCatalog, mapper, cache config, dto/, enums/
 │   └── controller/     PokemonController, PokemonResponses
-├── localpokemon/       US03–US04 (Phase 2): domain, service, repository, entity, controller
-└── identity/           users and auth (Phase 3)
+├── localpokemon/       US03–US04: domain, service, repository, entity, controller
+└── identity/           users and auth: domain, service, security, repository, entity, controller
 ```
 
 `ArchitectureTest` enforces the dependency rule: `controller → service → domain ← client / repository`. The domain stays framework-free, and features have no cycles between them.
@@ -84,10 +84,10 @@ Versions are managed by the Spring Boot BOM (Boot **4.1.1**) unless pinned in `b
 | **spring-boot-starter-cache** | The Spring Cache abstraction (`@Cacheable`), applied on `PokeApiClient` in `catalog.client`, so the caching policy stays out of the business layer. |
 | **spring-boot-starter-data-redis** | Redis as the cache store: shared across instances and inspectable during the demo (`redis-cli KEYS '*'`). A `LoggingCacheErrorHandler` plus 500 ms Redis timeouts make the API fall back to PokeAPI if Redis is down. |
 | **spring-boot-starter-security** | Authentication and authorization: a stateless filter chain, public vs protected routes, and BCrypt password hashing. |
-| **spring-boot-starter-security-oauth2-resource-server** | Validates `Authorization: Bearer <JWT>` tokens (HS256 signature and expiry) with Spring's built-in support, so there's no hand-written JWT filter. It also brings Nimbus JOSE, which is used to *issue* tokens at login. |
+| **spring-boot-starter-security-oauth2-resource-server** | Validates `Authorization: Bearer <JWT>` tokens (HS256 signature with the algorithm pinned, and expiry; see [ARCHITECTURE §8](../docs/ARCHITECTURE.md#how-a-request-with-a-bearer-token-is-checked)) with Spring's built-in support, so there's no hand-written JWT filter. It also brings Nimbus JOSE, which is used to *issue* tokens at login. |
 | **spring-boot-starter-actuator** | `/actuator/health` (with liveness and readiness probes), used by the Docker healthcheck. Only `health` and `info` are exposed. |
 | **springdoc-openapi-starter-webmvc-ui** `3.1.1` | Generates the OpenAPI spec from the controllers and serves **Swagger UI** at `/swagger-ui.html`, which is used for the demo and for manual testing. |
-| **mapstruct** + **mapstruct-processor** `1.6.3` (annotation processor) | Generates the domain → response and entity → domain mappings at compile time. Fields are matched by name, and an unmapped target fails the build (`MappingConfig`), so mixing up two `String` arguments can no longer compile silently. See [D21](../docs/DECISIONS.md#d21-mapstruct-for-response-and-entity-to-domain-mappings). |
+| **mapstruct** + **mapstruct-processor** `1.6.3` (annotation processor) | Generates the domain → response and entity → domain mappings at compile time. Fields are matched by name, and an unmapped target fails the build (`MappingConfig`), so mixing up two `String` arguments can no longer compile silently. See [D21](../docs/DECISIONS.md#d21-mapstruct-for-response-and-entity--domain-mappings). |
 | **spring-boot-configuration-processor** (annotation processor) | Generates metadata for the `poke.*` properties, so the IDE autocompletes and validates them in `application.yml`. |
 
 ### Test

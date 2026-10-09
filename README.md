@@ -6,6 +6,8 @@ A full-stack Pokemon application. It has a **Java / Spring Boot REST API** that 
 
 ![Catalog](docs/screenshots/catalog.png)
 
+> **Reviewing this project?** [Requirements and solutions](docs/REQUIREMENTS-AND-SOLUTIONS.md) maps every requirement of the exercise to how it is solved and where to check it.
+
 ## Purpose
 
 The project shows how to build a robust backend service with **Clean Architecture** and **TDD**, plus a responsive, user-centric frontend on top of it. The service does three jobs:
@@ -116,7 +118,7 @@ To record them again: `cd e2e && npm run demo` (see [docs/demo](docs/demo/)).
 
 ## API
 
-Everything is under `/api/v1`. Reads are public and writes need a `Bearer` token from `/auth/login`. The full contract, with request bodies, is in Swagger UI and [docs/ARCHITECTURE.md §6](docs/ARCHITECTURE.md#6-api-contract).
+Everything is under `/api/v1`. Reads are public and writes need a `Bearer` token from `/auth/login`. Spring Security validates the token before any controller runs: the HS256 signature, the algorithm and the expiry. The model and its accepted limits are in [ARCHITECTURE §8](docs/ARCHITECTURE.md#how-a-request-with-a-bearer-token-is-checked). The full contract, with request bodies, is in Swagger UI and [docs/ARCHITECTURE.md §6](docs/ARCHITECTURE.md#6-api-contract).
 
 | Method | Path | Auth | Story | What it does |
 |---|---|---|---|---|
@@ -167,6 +169,7 @@ GitHub Actions runs the same checks on every push to `main` and on pull requests
 
 - [API README](api/README.md): setup, configuration and what each backend dependency is for
 - [Web README](web/README.md): scripts, structure, Docker image and what each frontend library is for
+- [Requirements and solutions](docs/REQUIREMENTS-AND-SOLUTIONS.md): every requirement of the exercise mapped to its solution and evidence
 - [Architecture](docs/ARCHITECTURE.md): layers, data model, API contract, caching, auth, testing
 - [Decision log](docs/DECISIONS.md): why each technical choice was made (ADR-style)
 - [PokeAPI reference](docs/POKEAPI.md): upstream endpoints, mapping and quirks

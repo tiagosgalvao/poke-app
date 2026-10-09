@@ -16,7 +16,7 @@ The design is in `docs/ARCHITECTURE.md` and the reasons behind it are in `docs/D
 ```
 api/   Spring Boot 4.1 · Java 25 · Gradle Kotlin DSL   (package root: com.poke, feature-first)
 web/   React 19 · TypeScript · Vite 8 · Tailwind 4
-docs/  ARCHITECTURE.md (design), DECISIONS.md (decision log), POKEAPI.md (upstream reference), CONVENTIONS.md (commits, code style, best practices), ROADMAP.md (numbered tasks), GENAI.md (GenAI write-up), E2E-TEST-PLAN.md (browser flows), screenshots/, demo/ (recordings)
+docs/  ARCHITECTURE.md (design), DECISIONS.md (decision log), POKEAPI.md (upstream reference), CONVENTIONS.md (commits, code style, best practices), ROADMAP.md (numbered tasks), GENAI.md (GenAI write-up), E2E-TEST-PLAN.md (browser flows), REQUIREMENTS-AND-SOLUTIONS.md (spec → solution map), screenshots/, demo/ (recordings)
 docker-compose.yml   postgres:17 + redis:8 + api + web (nginx on :3000, proxies /api to the api service)
 e2e/                 Playwright browser flows against the compose stack (see docs/E2E-TEST-PLAN.md)
 .github/workflows/   CI: api.yml (gradle build + coverage gate), web.yml (lint, test, build), e2e.yml (compose stack + Playwright checks); path-filtered, also runnable by hand
@@ -59,8 +59,8 @@ npm run build                # tsc -b + vite build
 Packages are **feature-first** (`com.poke.<feature>`), with the usual Spring layers inside each feature. See `docs/ARCHITECTURE.md` §4 and D4.
 
 - **Features:** `catalog` (US01–US02, PokeAPI), `localpokemon` (US03–US04, Postgres), `identity` (users and auth), plus a `shared` kernel (`shared.exception`, `shared.pagination`, `shared.validation`, `shared.measure`, `shared.mapping`, `shared.config`).
-- **`<feature>.domain`** is pure Java: no Spring, JPA, Jackson or servlet imports. It holds business types, invariants, domain exceptions, and the interfaces the feature needs from outside (e.g. `PokemonCatalog`, later `LocalPokemonRepository`).
-- **`<feature>.service`** holds `@Service` classes (and `@Transactional` from Phase 2). They depend on `domain` only, never on `controller`, `client`, `repository` or `entity`.
+- **`<feature>.domain`** is pure Java: no Spring, JPA, Jackson or servlet imports. It holds business types, invariants, domain exceptions, and the interfaces the feature needs from outside (e.g. `PokemonCatalog`, `LocalPokemonRepository`, `UserRepository`).
+- **`<feature>.service`** holds `@Service` classes, `@Transactional` where they write. They depend on `domain` only, never on `controller`, `client`, `repository` or `entity`.
 - **`<feature>.client`** holds outbound HTTP (RestClient, DTOs, mapping, `@Cacheable`) and implements domain interfaces.
 - **`<feature>.repository` / `<feature>.entity`** hold Spring Data JPA repositories and `@Entity` classes, mapped to and from domain objects, and implement domain interfaces.
 - **`<feature>.security`** holds security infrastructure such as password hashing and token issuing (e.g. `identity.security`). It implements domain interfaces and follows the same rules as `client` and `repository`.
