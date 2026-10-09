@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "test": "playwright test",
-    "test:headed": "playwright test --headed",
-    "demo": "DEMO=1 playwright test",
+    "test": "playwright test --project=checks",
+    "test:headed": "playwright test --project=checks --headed",
+    "demo": "playwright test --project=demo",
     "report": "playwright show-report",
     "typecheck": "tsc --noEmit"
   },

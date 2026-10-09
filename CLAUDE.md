@@ -33,8 +33,8 @@ docker compose up --build
 scripts/smoke-test.sh
 
 # browser flows with Playwright against the running stack (run from e2e/)
-npm test                     # headless
-npm run demo                 # visible, slowed down, records docs/demo/*.webm
+npm test                     # regression checks (project "checks"), headless
+npm run demo                 # narrated demo chapters (project "demo"), recorded into docs/demo/*.mp4 (needs ffmpeg)
 
 # infrastructure only, for local dev
 docker compose up -d postgres redis

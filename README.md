@@ -104,6 +104,16 @@ The local store starts with 20 well-known Pokemon: the Kanto starters and their 
 | **Editing proprietary data (US04)** | **Mobile** |
 | ![Edit](docs/screenshots/edit.png) | <img src="docs/screenshots/catalog-mobile.png" alt="Catalog on a phone" width="260"> |
 
+## Demo videos
+
+Three narrated walkthroughs, recorded with Playwright against the running stack. Balloons explain each step next to the element in use. Click a thumbnail to watch the MP4.
+
+| [![Chapter 1: catalog and details](docs/demo/01-catalog-and-details.png)](docs/demo/01-catalog-and-details.mp4) | [![Chapter 2: accounts and protected routes](docs/demo/02-accounts-and-protected-routes.png)](docs/demo/02-accounts-and-protected-routes.mp4) | [![Chapter 3: My Pokedex](docs/demo/03-my-pokedex.png)](docs/demo/03-my-pokedex.mp4) |
+|---|---|---|
+| **1. Catalog and details** (1 min): US01 cards and pagination, US02 detail with stats, description and evolution chain | **2. Accounts and protected routes** (1 min): redirect to login and back, wrong password, log in and out, sign up | **3. My Pokedex** (2 min): US03 sync and import, US04 edit with validation, stale-edit 409, delete |
+
+To record them again: `cd e2e && npm run demo` (see [docs/demo](docs/demo/)).
+
 ## API
 
 Everything is under `/api/v1`. Reads are public and writes need a `Bearer` token from `/auth/login`. The full contract, with request bodies, is in Swagger UI and [docs/ARCHITECTURE.md §6](docs/ARCHITECTURE.md#6-api-contract).
@@ -147,7 +157,7 @@ cd web && npm run lint && npm run build
 
 Docker must be running for the API tests (Testcontainers).
 
-With the stack running, `cd e2e && npm install && npx playwright install chromium && npm test` runs the browser flows with Playwright. `npm run demo` runs them in a visible browser and records them into [docs/demo/](docs/demo/). The flows are described in the [end-to-end test plan](docs/E2E-TEST-PLAN.md).
+With the stack running, `cd e2e && npm install && npx playwright install chromium && npm test` runs the browser flows with Playwright. `npm run demo` plays the demo as three narrated chapters, with balloons explaining each step, and records them as MP4 into [docs/demo/](docs/demo/). Recording needs ffmpeg. The flows are described in the [end-to-end test plan](docs/E2E-TEST-PLAN.md).
 
 `scripts/smoke-test.sh` runs the demo flow against it through the nginx proxy: catalog, detail, auth, sync, update, import and delete, plus the 400/401/404/409 paths. It needs `curl` and `jq`.
 
@@ -175,5 +185,5 @@ docs/                design docs and screenshots
 docker-compose.yml   postgres + redis + api + web
 .github/workflows/   CI: api.yml and web.yml
 scripts/             smoke-test.sh, the end-to-end check against a running stack
-e2e/                 Playwright browser flows; npm run demo records them into docs/demo/
+e2e/                 Playwright: regression flows (tests/) and narrated demo chapters (demo/) recorded into docs/demo/
 ```

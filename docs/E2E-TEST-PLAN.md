@@ -23,7 +23,7 @@ None of them run the real browser against the real stack. These flows cover what
 |---|---|---|---|
 | `smoke.spec.ts` | | The catalog loads with no *My Pokedex* link for a visitor; a protected page redirects to login | The stack is up and the proxy and routing work. Runs first. |
 | `catalog.spec.ts` | US01, US02 | Browse page 1 → page 2 (`?page=2`), then open Eevee | Cards show sprite, category, weight and abilities. The detail page shows artwork, six stat bars, the description and the branching evolution chain. Clicking an evolution opens it. |
-| `auth.spec.ts` | Users | Open `/my-pokedex` logged out → login as `ash` → back on *My Pokedex*, with the link now in the header; register a new user; log out, and the link disappears | Public vs protected routes, the redirect to login and back, register-then-login, and the header showing the user |
+| `auth.spec.ts` | Users | Open `/my-pokedex` logged out → login as `ash` → back on *My Pokedex*, with the link now in the header; log out, landing on the catalog with the link gone; a wrong password is refused; register a new user | Public vs protected routes, the redirect to login and back, register-then-login, and the header showing the user |
 | `pokedex.spec.ts` | US03 | Sync ids `1, 4, 7`; add Ditto from its detail page | The sync summary appears and the list updates. "Add to My Pokedex" creates the record, and a second add is refused. |
 | `pokedex.spec.ts` | US04 | Edit Bulbasaur: invalid tag → inline error; valid tags and localized name → saved | Client-side validation, save, and the list showing the new data |
 | `pokedex.spec.ts` | US04 | Stale edit: the record changes underneath an open form, then save | A 409 is shown with "Reload latest", and reloading recovers |
@@ -54,22 +54,32 @@ docker compose up -d --build     # from the repo root: the stack under test
 cd e2e
 npm install
 npx playwright install chromium  # once, downloads the browser
-npm test                         # headless, about 30 s
-npm run demo                     # visible browser, slowed down, records docs/demo/*.webm
+npm test                         # the 11 regression checks, headless, a few seconds
+npm run demo                     # needs ffmpeg: the 3 narrated chapters in a visible browser, recorded into docs/demo/ (about 4 min)
 npm run report                   # opens the last HTML report (traces and videos of failures)
 ```
 
 `BASE_URL` points the tests at another stack (default `http://localhost:3000`).
 
-## Demo mode and recordings
+## Demo chapters and recordings
 
-`npm run demo` (`DEMO=1`) changes four things:
-- the browser is visible;
-- every step is slowed by 600 ms;
-- each test is recorded at 1280×800;
-- the `demoRecording` fixture saves each video as `docs/demo/<spec>-<test-title>.webm`, replacing the previous take.
+The demo is a separate Playwright project (`demo`, in `e2e/demo/`), apart from the regression checks (`checks`, in `e2e/tests/`). It replays the demo script as three narrated chapters:
 
-Re-record after any UI change, so the videos match the app.
+| Chapter | Covers |
+|---|---|
+| `01-catalog-and-details` | US01 catalog cards and pagination in the URL; US02 detail view: artwork, stats, description, Eevee's branching evolution chain |
+| `02-accounts-and-protected-routes` | Visitor menu, redirect to login and back, a refused wrong password, log in and log out, registering a new account |
+| `03-my-pokedex` | US03 sync and adding from the detail page; US04 edit with validation, a stale-edit 409 with "Reload latest", delete with an in-page confirm |
+
+How the narration works:
+- **`e2e/demo/narrator.ts`** injects an overlay into every page with three parts: a speech balloon, an outline around the element in use, and a cursor dot that glides to each click.
+- **Balloons** sit beside the target when there's room, otherwise below or above it. They stay up long enough to read: at least 2.5 s, or 300 ms per word.
+- **Typing** is shown key by key.
+- **The overlay** never takes clicks and never logs to the console, so the console guard still applies.
+
+The chapters keep their assertions, so a broken flow fails the recording instead of producing a misleading video. They also restore the data they change.
+
+`npm run demo` opens a visible browser and records at 1280×800, holding the final screen for 2 s. Playwright records WebM; the fixture converts each chapter with ffmpeg to `docs/demo/<chapter>.mp4` (H.264, `yuv420p`, `faststart`), which plays in QuickTime, browsers and GitHub. ffmpeg must be installed (`brew install ffmpeg`), or set `FFMPEG` to its path. It takes about 4 minutes. Re-record after any UI change, so the videos match the app.
 
 ## Status
 
@@ -78,5 +88,5 @@ Re-record after any UI change, so the videos match the app.
 | Playwright project, fixtures (console guard, API helper, sign-in, recording), smoke flows, this plan | 6.7 | Done |
 | Hide the *My Pokedex* link from visitors (app change before recording) | 6.8 | Done |
 | Fix: logging out on a protected page landed on login instead of home (found by `auth.spec.ts`) | 6.9 | Done |
-| Catalog, auth and My Pokedex flows; recordings in `docs/demo/` | 6.10 | Next |
+| Catalog, auth and My Pokedex flows (11 tests), plus three narrated demo chapters (balloons, highlight, cursor) recorded as MP4 in `docs/demo/` | 6.10 | Done |
 | Run the flows in CI against the compose stack | | To decide |

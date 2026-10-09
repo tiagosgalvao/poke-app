@@ -81,7 +81,14 @@ All Phase 3 code lives in `com.poke.identity`.
   Also smoke flows, and the plan in `docs/E2E-TEST-PLAN.md`.
 - [x] **6.8 hide my pokedex when logged out**: the *My Pokedex* nav link only shows for a signed-in user, and disappears on logout. The route guard is unchanged, so a typed or bookmarked `/my-pokedex` still redirects to login
 - [x] **6.9 logout from a protected page goes home**: logging out on *My Pokedex* sent the user to the login page. `RequireAuth` reacted to the cleared session before the navigation home had rendered (the router commits in a transition, while the store update renders at once). The user menu now navigates home with a sign-out marker and clears the session in an effect, once home is on screen. Found by the Playwright auth flow. A first fix (awaiting the navigation) passed in jsdom but still failed in a real browser
-- [ ] **6.10 demo flows and recordings**: catalog (browse, detail and evolution), auth (redirect and back, wrong password, register, logout) and My Pokedex (sync, add and delete, edit with validation, stale-edit conflict) flows, with recordings committed under `docs/demo/`
+- [x] **6.10 demo flows and recordings**: the browser flows and the demo videos.
+  - Regression flows in `e2e/tests` (`npm test`): catalog (browse, detail and evolution), auth (redirect and back, wrong password, register, logout) and My Pokedex (sync, add and delete, edit with validation, stale-edit conflict).
+  - The demo is three narrated chapters in `e2e/demo` (`npm run demo`):
+    - catalog and details;
+    - accounts and protected routes;
+    - My Pokedex.
+  - A `Narrator` overlay shows a balloon beside each element in use, outlines it, and moves a cursor dot to each click.
+  - The chapters are recorded and converted with ffmpeg to MP4 (H.264) under `docs/demo/`. The README shows them as clickable thumbnails.
 
 ## Demo script (for the presentation)
 
