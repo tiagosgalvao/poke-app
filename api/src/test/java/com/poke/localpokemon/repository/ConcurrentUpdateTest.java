@@ -1,11 +1,7 @@
 package com.poke.localpokemon.repository;
 
 import com.poke.TestcontainersConfiguration;
-import com.poke.localpokemon.domain.LocalPokemon;
-import com.poke.localpokemon.domain.LocalPokemonRepository;
-import com.poke.localpokemon.domain.ProprietaryData;
-import com.poke.localpokemon.domain.StaleVersionException;
-import com.poke.localpokemon.domain.UpstreamData;
+import com.poke.localpokemon.domain.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,7 +35,7 @@ class ConcurrentUpdateTest {
 	@BeforeEach
 	void storeATestPokemon() {
 		repository.save(LocalPokemon.importFrom(TEST_ID, new UpstreamData("test-concurrency", null, null, null, 10, 5,
-				List.of(), List.of()), IMPORTED_AT));
+			List.of(), List.of()), IMPORTED_AT));
 	}
 
 	@AfterEach
@@ -56,7 +52,7 @@ class ConcurrentUpdateTest {
 		assertThatThrownBy(() -> outer.executeWithoutResult(status -> {
 			var readBeforeTheOtherWrite = repository.findById(TEST_ID).orElseThrow();
 			concurrent.executeWithoutResult(other -> repository.save(
-					repository.findById(TEST_ID).orElseThrow().withProprietary(withRegion("Kanto"), LATER)));
+				repository.findById(TEST_ID).orElseThrow().withProprietary(withRegion("Kanto"), LATER)));
 
 			repository.save(readBeforeTheOtherWrite.withProprietary(withRegion("Johto"), LATER));
 		})).isInstanceOf(StaleVersionException.class).hasMessageContaining(String.valueOf(TEST_ID));

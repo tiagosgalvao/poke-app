@@ -5,14 +5,14 @@ import com.poke.shared.validation.Require;
 import java.util.List;
 
 public record PokemonSummary(
-		int id,
-		String name,
-		String spriteUrl,
-		String category,
-		int weightHectograms,
-		int heightDecimetres,
-		List<String> types,
-		List<Ability> abilities) {
+	int id,
+	String name,
+	String spriteUrl,
+	String category,
+	int weightHectograms,
+	int heightDecimetres,
+	List<String> types,
+	List<Ability> abilities) {
 
 	public PokemonSummary {
 		Require.positive(id, "id");

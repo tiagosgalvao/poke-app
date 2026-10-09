@@ -16,10 +16,10 @@ class SpeciesDtoTest {
 	@Test
 	void keepsOnlyTheGenusAndLatestFlavorTextOfTheRequestedLanguage() {
 		var species = new SpeciesDto(25, "pikachu",
-				List.of(new Genus("ねずみポケモン", JAPANESE), new Genus("Mouse Pokemon", ENGLISH)),
-				List.of(new FlavorText("old", ENGLISH, null), new FlavorText("日本語", JAPANESE, null),
-						new FlavorText("latest", ENGLISH, null)),
-				new SpeciesDto.ApiResource("https://pokeapi.co/api/v2/evolution-chain/10/"));
+			List.of(new Genus("ねずみポケモン", JAPANESE), new Genus("Mouse Pokemon", ENGLISH)),
+			List.of(new FlavorText("old", ENGLISH, null), new FlavorText("日本語", JAPANESE, null),
+				new FlavorText("latest", ENGLISH, null)),
+			new SpeciesDto.ApiResource("https://pokeapi.co/api/v2/evolution-chain/10/"));
 
 		var trimmed = species.keepingOnlyLatestTextIn("en");
 

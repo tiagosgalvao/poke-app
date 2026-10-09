@@ -18,6 +18,6 @@ class ResourceUrlsTest {
 	void rejectsMissingOrMalformedUrls() {
 		assertThatThrownBy(() -> ResourceUrls.idOf(null)).isInstanceOf(MalformedPokeApiResponseException.class);
 		assertThatThrownBy(() -> ResourceUrls.idOf("https://pokeapi.co/api/v2/pokemon/pikachu/"))
-				.isInstanceOf(MalformedPokeApiResponseException.class);
+			.isInstanceOf(MalformedPokeApiResponseException.class);
 	}
 }

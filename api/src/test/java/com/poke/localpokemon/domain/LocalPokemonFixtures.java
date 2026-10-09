@@ -14,7 +14,7 @@ public final class LocalPokemonFixtures {
 
 	public static UpstreamData pikachuUpstream() {
 		return new UpstreamData("pikachu", "https://img/25.png", "https://img/art/25.png", "Mouse Pokemon", 60, 4,
-				List.of("electric"), List.of("static", "lightning-rod"));
+			List.of("electric"), List.of("static", "lightning-rod"));
 	}
 
 	public static ProprietaryData pikachuProprietary() {

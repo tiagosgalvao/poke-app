@@ -16,45 +16,45 @@ final class LocalPokemonResponses {
 	}
 
 	record LocalPokemonResponse(
-			int id,
-			String name,
-			String spriteUrl,
-			String imageUrl,
-			String category,
-			double weightKg,
-			double heightM,
-			List<String> types,
-			List<String> abilities,
-			String localizedName,
-			String region,
-			String habitat,
-			Set<String> tags,
-			String notes,
-			long version,
-			Instant syncedAt,
-			Instant updatedAt) {
+		int id,
+		String name,
+		String spriteUrl,
+		String imageUrl,
+		String category,
+		double weightKg,
+		double heightM,
+		List<String> types,
+		List<String> abilities,
+		String localizedName,
+		String region,
+		String habitat,
+		Set<String> tags,
+		String notes,
+		long version,
+		Instant syncedAt,
+		Instant updatedAt) {
 
 		static LocalPokemonResponse from(LocalPokemon pokemon) {
 			var upstream = pokemon.upstream();
 			var proprietary = pokemon.proprietary();
 			return new LocalPokemonResponse(
-					pokemon.id(),
-					upstream.name(),
-					upstream.spriteUrl(),
-					upstream.imageUrl(),
-					upstream.category(),
-					kilograms(upstream.weightHectograms()),
-					metres(upstream.heightDecimetres()),
-					upstream.types(),
-					upstream.abilities(),
-					proprietary.localizedName(),
-					proprietary.region(),
-					proprietary.habitat(),
-					proprietary.tags(),
-					proprietary.notes(),
-					pokemon.version(),
-					pokemon.syncedAt(),
-					pokemon.updatedAt());
+				pokemon.id(),
+				upstream.name(),
+				upstream.spriteUrl(),
+				upstream.imageUrl(),
+				upstream.category(),
+				kilograms(upstream.weightHectograms()),
+				metres(upstream.heightDecimetres()),
+				upstream.types(),
+				upstream.abilities(),
+				proprietary.localizedName(),
+				proprietary.region(),
+				proprietary.habitat(),
+				proprietary.tags(),
+				proprietary.notes(),
+				pokemon.version(),
+				pokemon.syncedAt(),
+				pokemon.updatedAt());
 		}
 	}
 

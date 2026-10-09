@@ -10,8 +10,8 @@ import java.time.Duration;
 @Validated
 @ConfigurationProperties("poke.security")
 public record SecurityProperties(
-		@NotNull @Size(min = SecurityProperties.MIN_SECRET_LENGTH) String jwtSecret,
-		@NotNull Duration tokenTtl) {
+	@NotNull @Size(min = SecurityProperties.MIN_SECRET_LENGTH) String jwtSecret,
+	@NotNull Duration tokenTtl) {
 
 	public static final int MIN_SECRET_LENGTH = 32;
 }

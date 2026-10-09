@@ -29,7 +29,7 @@ public record PokemonKey(String value, boolean isId) {
 		}
 		if (candidate.length() > MAX_NAME_LENGTH || !NAME.matcher(candidate).matches()) {
 			throw new DomainValidationException(
-					"Pokemon id or name must be a positive number or contain only letters, digits and hyphens");
+				"Pokemon id or name must be a positive number or contain only letters, digits and hyphens");
 		}
 		return new PokemonKey(candidate, false);
 	}

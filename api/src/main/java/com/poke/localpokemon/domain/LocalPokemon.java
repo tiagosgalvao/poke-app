@@ -5,12 +5,12 @@ import com.poke.shared.validation.Require;
 import java.time.Instant;
 
 public record LocalPokemon(
-		int id,
-		UpstreamData upstream,
-		ProprietaryData proprietary,
-		long version,
-		Instant syncedAt,
-		Instant updatedAt) {
+	int id,
+	UpstreamData upstream,
+	ProprietaryData proprietary,
+	long version,
+	Instant syncedAt,
+	Instant updatedAt) {
 
 	private static final long INITIAL_VERSION = 0;
 

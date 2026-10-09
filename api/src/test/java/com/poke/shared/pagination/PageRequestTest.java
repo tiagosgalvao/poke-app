@@ -24,15 +24,15 @@ class PageRequestTest {
 	@Test
 	void rejectsNegativePage() {
 		assertThatThrownBy(() -> new PageRequest(-1, 20))
-				.isInstanceOf(DomainValidationException.class)
-				.hasMessageContaining("page");
+			.isInstanceOf(DomainValidationException.class)
+			.hasMessageContaining("page");
 	}
 
 	@Test
 	void rejectsSizeOutOfRange() {
 		assertThatThrownBy(() -> new PageRequest(0, 0)).isInstanceOf(DomainValidationException.class);
 		assertThatThrownBy(() -> new PageRequest(0, 51))
-				.isInstanceOf(DomainValidationException.class)
-				.hasMessageContaining("size");
+			.isInstanceOf(DomainValidationException.class)
+			.hasMessageContaining("size");
 	}
 }

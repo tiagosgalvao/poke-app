@@ -12,7 +12,7 @@ public record RawPassword(String value) {
 	public RawPassword {
 		if (value == null || value.length() < MIN_LENGTH || value.length() > MAX_LENGTH) {
 			throw new DomainValidationException(
-					"password must be between " + MIN_LENGTH + " and " + MAX_LENGTH + " characters");
+				"password must be between " + MIN_LENGTH + " and " + MAX_LENGTH + " characters");
 		}
 	}
 

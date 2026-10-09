@@ -33,8 +33,8 @@ class SyncBatchTest {
 		assertThatThrownBy(() -> new SyncBatch(List.of())).isInstanceOf(DomainValidationException.class);
 		assertThatThrownBy(() -> new SyncBatch(null)).isInstanceOf(DomainValidationException.class);
 		assertThatThrownBy(() -> new SyncBatch(IntStream.rangeClosed(1, MAX_IDS + 1).boxed().toList()))
-				.isInstanceOf(DomainValidationException.class)
-				.hasMessageContaining(String.valueOf(MAX_IDS));
+			.isInstanceOf(DomainValidationException.class)
+			.hasMessageContaining(String.valueOf(MAX_IDS));
 	}
 
 	@Test

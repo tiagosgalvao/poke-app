@@ -16,8 +16,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class DatabaseMigrationTest {
 
 	private static final String INSERT_POKEMON = """
-			insert into local_pokemon (id, name, weight_hectograms, height_decimetres, synced_at, updated_at)
-			values (?, ?, ?, ?, now(), now())""";
+		insert into local_pokemon (id, name, weight_hectograms, height_decimetres, synced_at, updated_at)
+		values (?, ?, ?, ?, now(), now())""";
 	private static final String INSERT_USER = "insert into users (id, username, email, password_hash) values (gen_random_uuid(), ?, ?, 'hash')";
 	private static final int FIRST_TEST_ID = 901;
 	private static final int SECOND_TEST_ID = 902;
@@ -35,7 +35,7 @@ class DatabaseMigrationTest {
 	@Test
 	void createsTheUsersAndLocalPokemonTables() {
 		var tables = jdbc.queryForList(
-				"select table_name from information_schema.tables where table_schema = 'public'", String.class);
+			"select table_name from information_schema.tables where table_schema = 'public'", String.class);
 
 		assertThat(tables).contains("users", "local_pokemon", "local_pokemon_type", "local_pokemon_ability", "local_pokemon_tag");
 	}
@@ -58,17 +58,17 @@ class DatabaseMigrationTest {
 		jdbc.update(INSERT_POKEMON, FIRST_TEST_ID, "test-pokemon-a", 60, 4);
 
 		assertThatThrownBy(() -> jdbc.update(INSERT_POKEMON, SECOND_TEST_ID, "test-pokemon-a", 300, 8))
-				.isInstanceOf(DataIntegrityViolationException.class);
+			.isInstanceOf(DataIntegrityViolationException.class);
 	}
 
 	@Test
 	void rejectsNonPositiveIdsAndNegativeMeasures() {
 		assertThatThrownBy(() -> jdbc.update(INSERT_POKEMON, 0, "test-missingno", 1, 1))
-				.isInstanceOf(DataIntegrityViolationException.class);
+			.isInstanceOf(DataIntegrityViolationException.class);
 		assertThatThrownBy(() -> jdbc.update(INSERT_POKEMON, SECOND_TEST_ID, "test-pokemon-b", -1, 7))
-				.isInstanceOf(DataIntegrityViolationException.class);
+			.isInstanceOf(DataIntegrityViolationException.class);
 		assertThatThrownBy(() -> jdbc.update(INSERT_POKEMON, SECOND_TEST_ID, "test-pokemon-b", 69, -1))
-				.isInstanceOf(DataIntegrityViolationException.class);
+			.isInstanceOf(DataIntegrityViolationException.class);
 	}
 
 	@Test
@@ -88,7 +88,7 @@ class DatabaseMigrationTest {
 	@Test
 	void collectionsRequireAnExistingPokemon() {
 		assertThatThrownBy(() -> jdbc.update("insert into local_pokemon_tag (pokemon_id, tag) values (?, 'orphan')", SECOND_TEST_ID))
-				.isInstanceOf(DataIntegrityViolationException.class);
+			.isInstanceOf(DataIntegrityViolationException.class);
 	}
 
 	@Test
@@ -96,9 +96,9 @@ class DatabaseMigrationTest {
 		jdbc.update(INSERT_USER, "test-ash", "test-ash@pallet.town");
 
 		assertThatThrownBy(() -> jdbc.update(INSERT_USER, "test-ash", "test-other@pallet.town"))
-				.isInstanceOf(DataIntegrityViolationException.class);
+			.isInstanceOf(DataIntegrityViolationException.class);
 		assertThatThrownBy(() -> jdbc.update(INSERT_USER, "test-misty", "test-ash@pallet.town"))
-				.isInstanceOf(DataIntegrityViolationException.class);
+			.isInstanceOf(DataIntegrityViolationException.class);
 	}
 
 	@Test
@@ -111,17 +111,17 @@ class DatabaseMigrationTest {
 	@Test
 	void seededPokemonCarryUpstreamAndProprietaryData() {
 		var pikachu = jdbc.queryForMap(
-				"select name, category, weight_hectograms, localized_name, region, habitat, notes from local_pokemon where id = 25");
+			"select name, category, weight_hectograms, localized_name, region, habitat, notes from local_pokemon where id = 25");
 		var types = jdbc.queryForList("select type from local_pokemon_type where pokemon_id = 25 order by position", String.class);
 		var abilities = jdbc.queryForList(
-				"select ability from local_pokemon_ability where pokemon_id = 25 order by position", String.class);
+			"select ability from local_pokemon_ability where pokemon_id = 25 order by position", String.class);
 		var tags = jdbc.queryForList("select tag from local_pokemon_tag where pokemon_id = 25", String.class);
 
 		assertThat(pikachu).containsEntry("name", "pikachu")
-				.containsEntry("weight_hectograms", 60)
-				.containsEntry("localized_name", "ピカチュウ")
-				.containsEntry("region", "Kanto")
-				.containsEntry("habitat", "forest");
+			.containsEntry("weight_hectograms", 60)
+			.containsEntry("localized_name", "ピカチュウ")
+			.containsEntry("region", "Kanto")
+			.containsEntry("habitat", "forest");
 		assertThat(pikachu.get("notes")).isNotNull();
 		assertThat(types).containsExactly("electric");
 		assertThat(abilities).containsExactly("static", "lightning-rod");

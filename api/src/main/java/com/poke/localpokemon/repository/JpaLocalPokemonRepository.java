@@ -39,7 +39,7 @@ public class JpaLocalPokemonRepository implements LocalPokemonRepository {
 	public Page<LocalPokemon> findPage(PageRequest request) {
 		var page = jpa.findAll(org.springframework.data.domain.PageRequest.of(request.page(), request.size(), BY_NATIONAL_ID));
 		return new Page<>(page.map(LocalPokemonEntity::toDomain).getContent(), request.page(), request.size(),
-				page.getTotalElements());
+			page.getTotalElements());
 	}
 
 	@Override
@@ -49,8 +49,7 @@ public class JpaLocalPokemonRepository implements LocalPokemonRepository {
 		entity.copyFrom(pokemon);
 		try {
 			return jpa.saveAndFlush(entity).toDomain();
-		}
-		catch (ObjectOptimisticLockingFailureException concurrentUpdate) {
+		} catch (ObjectOptimisticLockingFailureException concurrentUpdate) {
 			throw new StaleVersionException(pokemon.id());
 		}
 	}

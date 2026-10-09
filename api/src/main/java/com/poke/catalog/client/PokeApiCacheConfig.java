@@ -20,10 +20,7 @@ import org.springframework.data.redis.serializer.RedisSerializationContext.Seria
 import java.time.Duration;
 import java.util.Map;
 
-import static com.poke.catalog.client.PokeApiCacheNames.EVOLUTION_CHAIN;
-import static com.poke.catalog.client.PokeApiCacheNames.POKEMON;
-import static com.poke.catalog.client.PokeApiCacheNames.POKEMON_PAGE;
-import static com.poke.catalog.client.PokeApiCacheNames.SPECIES;
+import static com.poke.catalog.client.PokeApiCacheNames.*;
 
 @Configuration(proxyBeanMethods = false)
 @EnableCaching
@@ -34,20 +31,20 @@ class PokeApiCacheConfig implements CachingConfigurer {
 
 	@Bean
 	RedisCacheManager cacheManager(
-			RedisConnectionFactory connectionFactory,
-			@Value("${spring.cache.redis.time-to-live:24h}") Duration timeToLive) {
+		RedisConnectionFactory connectionFactory,
+		@Value("${spring.cache.redis.time-to-live:24h}") Duration timeToLive) {
 		var defaults = RedisCacheConfiguration.defaultCacheConfig()
-				.entryTtl(timeToLive)
-				.prefixCacheNameWith(KEY_PREFIX);
+			.entryTtl(timeToLive)
+			.prefixCacheNameWith(KEY_PREFIX);
 		return RedisCacheManager.builder(connectionFactory)
-				.cacheDefaults(defaults)
-				.withInitialCacheConfigurations(Map.of(
-						POKEMON_PAGE, typed(defaults, PokemonListDto.class),
-						POKEMON, typed(defaults, PokemonDto.class),
-						SPECIES, typed(defaults, SpeciesDto.class),
-						EVOLUTION_CHAIN, typed(defaults, EvolutionChainDto.class)))
-				.disableCreateOnMissingCache()
-				.build();
+			.cacheDefaults(defaults)
+			.withInitialCacheConfigurations(Map.of(
+				POKEMON_PAGE, typed(defaults, PokemonListDto.class),
+				POKEMON, typed(defaults, PokemonDto.class),
+				SPECIES, typed(defaults, SpeciesDto.class),
+				EVOLUTION_CHAIN, typed(defaults, EvolutionChainDto.class)))
+			.disableCreateOnMissingCache()
+			.build();
 	}
 
 	@Override

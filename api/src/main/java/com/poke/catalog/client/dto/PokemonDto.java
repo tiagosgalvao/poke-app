@@ -7,15 +7,15 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record PokemonDto(
-		int id,
-		String name,
-		int height,
-		int weight,
-		List<AbilitySlot> abilities,
-		List<TypeSlot> types,
-		List<StatValue> stats,
-		Sprites sprites,
-		NamedResource species) {
+	int id,
+	String name,
+	int height,
+	int weight,
+	List<AbilitySlot> abilities,
+	List<TypeSlot> types,
+	List<StatValue> stats,
+	Sprites sprites,
+	NamedResource species) {
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record AbilitySlot(@JsonProperty("is_hidden") boolean hidden, int slot, NamedResource ability) {

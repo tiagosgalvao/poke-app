@@ -10,15 +10,15 @@ public record EvolutionChainDto(int id, ChainLink chain) {
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record ChainLink(
-			NamedResource species,
-			@JsonProperty("evolution_details") List<EvolutionDetail> evolutionDetails,
-			@JsonProperty("evolves_to") List<ChainLink> evolvesTo) {
+		NamedResource species,
+		@JsonProperty("evolution_details") List<EvolutionDetail> evolutionDetails,
+		@JsonProperty("evolves_to") List<ChainLink> evolvesTo) {
 	}
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record EvolutionDetail(
-			NamedResource trigger,
-			NamedResource item,
-			@JsonProperty("min_level") Integer minLevel) {
+		NamedResource trigger,
+		NamedResource item,
+		@JsonProperty("min_level") Integer minLevel) {
 	}
 }

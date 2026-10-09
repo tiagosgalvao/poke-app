@@ -28,12 +28,12 @@ class EvolutionStageTest {
 	@Test
 	void rejectsInconsistentStages() {
 		assertThatThrownBy(() -> new EvolutionStage(0, 133, "eevee", 1, null, null))
-				.isInstanceOf(DomainValidationException.class);
+			.isInstanceOf(DomainValidationException.class);
 		assertThatThrownBy(() -> new EvolutionStage(1, 134, "vaporeon", null, null, null))
-				.isInstanceOf(DomainValidationException.class);
+			.isInstanceOf(DomainValidationException.class);
 		assertThatThrownBy(() -> new EvolutionStage(-1, 1, "x", null, null, null))
-				.isInstanceOf(DomainValidationException.class);
+			.isInstanceOf(DomainValidationException.class);
 		assertThatThrownBy(() -> new EvolutionStage(0, 0, "x", null, null, null))
-				.isInstanceOf(DomainValidationException.class);
+			.isInstanceOf(DomainValidationException.class);
 	}
 }

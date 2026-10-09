@@ -1,7 +1,7 @@
 package com.poke.catalog.client;
 
-import com.poke.catalog.client.dto.EvolutionChainDto.EvolutionDetail;
 import com.poke.catalog.client.dto.EvolutionChainDto;
+import com.poke.catalog.client.dto.EvolutionChainDto.EvolutionDetail;
 import com.poke.catalog.client.dto.NamedResource;
 import com.poke.catalog.domain.EvolutionStage;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,7 @@ class EvolutionChainFlattenerTest {
 			assertThat(stage.evolvesFromId()).isEqualTo(133);
 		});
 		assertThat(stages).extracting(EvolutionStage::name)
-				.contains("vaporeon", "jolteon", "flareon", "espeon", "umbreon", "leafeon", "glaceon", "sylveon");
+			.contains("vaporeon", "jolteon", "flareon", "espeon", "umbreon", "leafeon", "glaceon", "sylveon");
 		assertThat(stages.get(1).trigger()).isEqualTo("use-item: water-stone");
 	}
 
@@ -49,7 +49,7 @@ class EvolutionChainFlattenerTest {
 		var stages = EvolutionChainFlattener.flatten(chain("evolution-chain-10.json").chain());
 
 		assertThat(stages.get(1).spriteUrl())
-				.isEqualTo("https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png");
+			.isEqualTo("https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png");
 	}
 
 	@Test
@@ -63,11 +63,11 @@ class EvolutionChainFlattenerTest {
 		var stone = new NamedResource("water-stone", null);
 
 		assertThat(EvolutionChainFlattener.describeTrigger(List.of(new EvolutionDetail(levelUp, null, 16))))
-				.isEqualTo("level-up: 16");
+			.isEqualTo("level-up: 16");
 		assertThat(EvolutionChainFlattener.describeTrigger(List.of(new EvolutionDetail(new NamedResource("use-item", null), stone, null))))
-				.isEqualTo("use-item: water-stone");
+			.isEqualTo("use-item: water-stone");
 		assertThat(EvolutionChainFlattener.describeTrigger(List.of(new EvolutionDetail(levelUp, null, null))))
-				.isEqualTo("level-up");
+			.isEqualTo("level-up");
 		assertThat(EvolutionChainFlattener.describeTrigger(List.of())).isNull();
 	}
 

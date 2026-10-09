@@ -28,19 +28,17 @@ public class ProblemDetailSecurityHandler implements AuthenticationEntryPoint, A
 	}
 
 	@Override
-	public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception)
-			throws IOException {
+	public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException {
 		write(request, response, UNAUTHORIZED, AUTHENTICATION_REQUIRED);
 	}
 
 	@Override
 	public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException exception)
-			throws IOException {
+		throws IOException {
 		write(request, response, FORBIDDEN, ACCESS_DENIED);
 	}
 
-	private void write(HttpServletRequest request, HttpServletResponse response, HttpStatus status, String detail)
-			throws IOException {
+	private void write(HttpServletRequest request, HttpServletResponse response, HttpStatus status, String detail) throws IOException {
 		var problem = new LinkedHashMap<String, Object>();
 		problem.put("title", status.getReasonPhrase());
 		problem.put("status", status.value());

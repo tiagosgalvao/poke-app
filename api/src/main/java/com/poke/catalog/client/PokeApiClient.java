@@ -15,10 +15,7 @@ import org.springframework.web.client.RestClientException;
 import java.net.http.HttpClient;
 import java.util.Optional;
 
-import static com.poke.catalog.client.PokeApiCacheNames.EVOLUTION_CHAIN;
-import static com.poke.catalog.client.PokeApiCacheNames.POKEMON;
-import static com.poke.catalog.client.PokeApiCacheNames.POKEMON_PAGE;
-import static com.poke.catalog.client.PokeApiCacheNames.SPECIES;
+import static com.poke.catalog.client.PokeApiCacheNames.*;
 import static com.poke.catalog.client.enums.PokeApiLanguage.ENGLISH;
 import static java.net.http.HttpClient.Redirect.NORMAL;
 import static org.springframework.http.HttpHeaders.USER_AGENT;
@@ -37,17 +34,17 @@ public class PokeApiClient {
 
 	public PokeApiClient(PokeApiProperties properties, RestClient.Builder restClientBuilder) {
 		this.http = restClientBuilder
-				.baseUrl(properties.baseUrl())
-				.requestFactory(requestFactory(properties))
-				.defaultHeader(USER_AGENT, CLIENT_NAME)
-				.build();
+			.baseUrl(properties.baseUrl())
+			.requestFactory(requestFactory(properties))
+			.defaultHeader(USER_AGENT, CLIENT_NAME)
+			.build();
 	}
 
 	private static JdkClientHttpRequestFactory requestFactory(PokeApiProperties properties) {
 		var httpClient = HttpClient.newBuilder()
-				.connectTimeout(properties.connectTimeout())
-				.followRedirects(NORMAL)
-				.build();
+			.connectTimeout(properties.connectTimeout())
+			.followRedirects(NORMAL)
+			.build();
 		var requestFactory = new JdkClientHttpRequestFactory(httpClient);
 		requestFactory.setReadTimeout(properties.readTimeout());
 		return requestFactory;
@@ -56,7 +53,7 @@ public class PokeApiClient {
 	@Cacheable(cacheNames = POKEMON_PAGE, key = "#offset + ':' + #limit")
 	public PokemonListDto list(long offset, int limit) {
 		return fetch(PokemonListDto.class, POKEMON_LIST_URI, offset, limit)
-				.orElseThrow(() -> new MalformedPokeApiResponseException("PokeAPI returned no Pokemon list"));
+			.orElseThrow(() -> new MalformedPokeApiResponseException("PokeAPI returned no Pokemon list"));
 	}
 
 	@Cacheable(cacheNames = POKEMON, unless = UNLESS_NOT_FOUND)
@@ -67,7 +64,7 @@ public class PokeApiClient {
 	@Cacheable(cacheNames = SPECIES, unless = UNLESS_NOT_FOUND)
 	public Optional<SpeciesDto> species(int id) {
 		return fetch(SpeciesDto.class, SPECIES_URI, id)
-				.map(species -> species.keepingOnlyLatestTextIn(ENGLISH.code()));
+			.map(species -> species.keepingOnlyLatestTextIn(ENGLISH.code()));
 	}
 
 	@Cacheable(cacheNames = EVOLUTION_CHAIN, unless = UNLESS_NOT_FOUND)
@@ -78,11 +75,9 @@ public class PokeApiClient {
 	private <T> Optional<T> fetch(Class<T> type, String uri, Object... variables) {
 		try {
 			return Optional.ofNullable(http.get().uri(uri, variables).retrieve().body(type));
-		}
-		catch (HttpClientErrorException.NotFound notFound) {
+		} catch (HttpClientErrorException.NotFound notFound) {
 			return Optional.empty();
-		}
-		catch (RestClientException failure) {
+		} catch (RestClientException failure) {
 			throw new ExternalServiceUnavailableException("PokeAPI request failed: " + uri, failure);
 		}
 	}

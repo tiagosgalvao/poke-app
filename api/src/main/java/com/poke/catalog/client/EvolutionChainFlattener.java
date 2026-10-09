@@ -13,7 +13,7 @@ import static com.poke.catalog.client.dto.NullSafeLists.orEmpty;
 final class EvolutionChainFlattener {
 
 	static final String SPRITE_URL_TEMPLATE =
-			"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/%d.png";
+		"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/%d.png";
 
 	private static final String TRIGGER_DETAIL_SEPARATOR = ": ";
 
@@ -31,12 +31,12 @@ final class EvolutionChainFlattener {
 			var current = pending.poll();
 			int id = current.link().species().id();
 			stages.add(new EvolutionStage(
-					current.stage(),
-					id,
-					current.link().species().name(),
-					current.evolvesFromId(),
-					current.stage() == 0 ? null : describeTrigger(current.link().evolutionDetails()),
-					SPRITE_URL_TEMPLATE.formatted(id)));
+				current.stage(),
+				id,
+				current.link().species().name(),
+				current.evolvesFromId(),
+				current.stage() == 0 ? null : describeTrigger(current.link().evolutionDetails()),
+				SPRITE_URL_TEMPLATE.formatted(id)));
 			for (var next : orEmpty(current.link().evolvesTo())) {
 				pending.add(new PendingLink(next, current.stage() + 1, id));
 			}

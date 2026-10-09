@@ -1,12 +1,7 @@
 package com.poke.identity.entity;
 
 import com.poke.identity.domain.User;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PostLoad;
-import jakarta.persistence.PostPersist;
-import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
+import jakarta.persistence.*;
 import org.springframework.data.domain.Persistable;
 
 import java.time.Instant;

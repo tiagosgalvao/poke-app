@@ -49,14 +49,14 @@ class ProprietaryDataTest {
 	@Test
 	void rejectsMoreThanTheMaximumNumberOfTags() {
 		assertThatThrownBy(() -> new ProprietaryData(null, null, null, tags(MAX_TAGS + 1), null))
-				.isInstanceOf(DomainValidationException.class)
-				.hasMessageContaining("at most " + MAX_TAGS);
+			.isInstanceOf(DomainValidationException.class)
+			.hasMessageContaining("at most " + MAX_TAGS);
 	}
 
 	@Test
 	void rejectsBlankTags() {
 		assertThatThrownBy(() -> new ProprietaryData(null, null, null, Set.of("  "), null))
-				.isInstanceOf(DomainValidationException.class);
+			.isInstanceOf(DomainValidationException.class);
 	}
 
 	private static Set<String> tags(int count) {

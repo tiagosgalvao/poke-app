@@ -14,13 +14,13 @@ class PokemonKeyTest {
 
 	@ParameterizedTest
 	@CsvSource({
-			"25, 25",
-			"025, 25",
-			"' 133 ', 133",
-			"Pikachu, pikachu",
-			"'  MR-MIME ', mr-mime",
-			"porygon-z, porygon-z",
-			"deoxys-attack, deoxys-attack"
+		"25, 25",
+		"025, 25",
+		"' 133 ', 133",
+		"Pikachu, pikachu",
+		"'  MR-MIME ', mr-mime",
+		"porygon-z, porygon-z",
+		"deoxys-attack, deoxys-attack"
 	})
 	void normalizesIdsAndNames(String raw, String expected) {
 		assertThat(PokemonKey.parse(raw).value()).isEqualTo(expected);

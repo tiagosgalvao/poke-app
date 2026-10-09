@@ -28,7 +28,7 @@ class UserTest {
 	@Test
 	void eachRegistrationGetsItsOwnId() {
 		assertThat(User.register("ash", "ash@pallet.town", "hash", NOW).id())
-				.isNotEqualTo(User.register("ash", "ash@pallet.town", "hash", NOW).id());
+			.isNotEqualTo(User.register("ash", "ash@pallet.town", "hash", NOW).id());
 	}
 
 	@Test
@@ -58,9 +58,9 @@ class UserTest {
 	@Test
 	void conflictsAndBadCredentialsHaveTheRightKind() {
 		assertThat(new UsernameAlreadyTakenException("ash")).isInstanceOf(ConflictException.class)
-				.hasMessageContaining("ash");
+			.hasMessageContaining("ash");
 		assertThat(new EmailAlreadyRegisteredException()).isInstanceOf(ConflictException.class);
 		assertThat(new InvalidCredentialsException()).isInstanceOf(UnauthorizedException.class)
-				.hasMessage("Invalid username or password");
+			.hasMessage("Invalid username or password");
 	}
 }

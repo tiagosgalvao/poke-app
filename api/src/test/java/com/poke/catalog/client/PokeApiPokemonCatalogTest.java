@@ -14,16 +14,9 @@ import org.springframework.web.client.RestClient;
 import java.io.IOException;
 import java.time.Duration;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static com.poke.catalog.client.PokeApiFixtures.fixture;
-import static com.poke.catalog.client.PokeApiFixtures.stubFixture;
-import static com.poke.catalog.client.PokeApiFixtures.stubSlowFixture;
+import static com.poke.catalog.client.PokeApiFixtures.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -152,7 +145,7 @@ class PokeApiPokemonCatalogTest {
 	@Test
 	void findDetailIsEmptyWhenPokeApiHasNoSuchPokemon() {
 		pokeApi.stubFor(get("/pokemon/missingno/")
-				.willReturn(aResponse().withStatus(404).withBody("{\"status\":404,\"message\":\"Not Found\"}")));
+			.willReturn(aResponse().withStatus(404).withBody("{\"status\":404,\"message\":\"Not Found\"}")));
 
 		assertThat(catalog.findDetail("missingno")).isEmpty();
 	}
@@ -178,7 +171,7 @@ class PokeApiPokemonCatalogTest {
 	@Test
 	void slowResponsesTimeOutAsUnavailable() throws IOException {
 		pokeApi.stubFor(get("/pokemon/25/").willReturn(okJson(fixture("pokemon-25.json"))
-				.withFixedDelay((int) READ_TIMEOUT.multipliedBy(3).toMillis())));
+			.withFixedDelay((int) READ_TIMEOUT.multipliedBy(3).toMillis())));
 
 		assertThatThrownBy(() -> catalog.findDetail("25")).isInstanceOf(ExternalServiceUnavailableException.class);
 	}
@@ -189,6 +182,6 @@ class PokeApiPokemonCatalogTest {
 		pokeApi.stubFor(get("/pokemon/25/").willReturn(aResponse().withStatus(404)));
 
 		assertThatThrownBy(() -> catalog.findPage(new PageRequest(12, 2)))
-				.isInstanceOf(ExternalServiceUnavailableException.class);
+			.isInstanceOf(ExternalServiceUnavailableException.class);
 	}
 }

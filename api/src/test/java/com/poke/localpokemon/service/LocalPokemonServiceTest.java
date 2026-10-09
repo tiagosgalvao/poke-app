@@ -4,14 +4,7 @@ import com.poke.catalog.domain.Ability;
 import com.poke.catalog.domain.PokemonDetail;
 import com.poke.catalog.domain.PokemonNotFoundException;
 import com.poke.catalog.service.CatalogService;
-import com.poke.localpokemon.domain.LocalPokemon;
-import com.poke.localpokemon.domain.LocalPokemonAlreadyExistsException;
-import com.poke.localpokemon.domain.LocalPokemonNotFoundException;
-import com.poke.localpokemon.domain.LocalPokemonRepository;
-import com.poke.localpokemon.domain.ProprietaryData;
-import com.poke.localpokemon.domain.ProprietaryPatch;
-import com.poke.localpokemon.domain.StaleVersionException;
-import com.poke.localpokemon.domain.SyncBatch;
+import com.poke.localpokemon.domain.*;
 import com.poke.shared.exception.ExternalServiceUnavailableException;
 import com.poke.shared.pagination.Page;
 import com.poke.shared.pagination.PageRequest;
@@ -28,16 +21,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static com.poke.localpokemon.domain.LocalPokemonFixtures.IMPORTED_AT;
-import static com.poke.localpokemon.domain.LocalPokemonFixtures.LATER;
-import static com.poke.localpokemon.domain.LocalPokemonFixtures.importedPikachu;
-import static com.poke.localpokemon.domain.LocalPokemonFixtures.pikachuProprietary;
+import static com.poke.localpokemon.domain.LocalPokemonFixtures.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class LocalPokemonServiceTest {
@@ -134,7 +122,7 @@ class LocalPokemonServiceTest {
 		when(repository.findById(26)).thenReturn(Optional.empty());
 
 		assertThatThrownBy(() -> service.update(26, 0, pikachuProprietary()))
-				.isInstanceOf(LocalPokemonNotFoundException.class);
+			.isInstanceOf(LocalPokemonNotFoundException.class);
 	}
 
 	@Test
@@ -156,7 +144,7 @@ class LocalPokemonServiceTest {
 		when(repository.findById(25)).thenReturn(Optional.of(importedPikachu()));
 
 		assertThatThrownBy(() -> service.patch(25, 1, new ProprietaryPatch(null, "Johto", null, null, null)))
-				.isInstanceOf(StaleVersionException.class);
+			.isInstanceOf(StaleVersionException.class);
 	}
 
 	@Test
@@ -215,18 +203,18 @@ class LocalPokemonServiceTest {
 		when(catalogService.getDetail("25")).thenThrow(new ExternalServiceUnavailableException("down", null));
 
 		assertThatThrownBy(() -> service.sync(new SyncBatch(List.of(25))))
-				.isInstanceOf(ExternalServiceUnavailableException.class);
+			.isInstanceOf(ExternalServiceUnavailableException.class);
 		verify(repository, never()).save(any());
 	}
 
 	private static PokemonDetail raichuDetail() {
 		return new PokemonDetail(26, "raichu", null, null, "Mouse Pokemon", 300, 8, List.of("electric"),
-				List.of(new Ability("static", false)), List.of(), null, List.of());
+			List.of(new Ability("static", false)), List.of(), null, List.of());
 	}
 
 	private static PokemonDetail pikachuDetail() {
 		return new PokemonDetail(25, "pikachu", "https://img/25.png", "https://img/art/25.png", "Mouse Pokemon", 60, 4,
-				List.of("electric"), List.of(new Ability("static", false), new Ability("lightning-rod", true)),
-				List.of(), "Possesses cheek sacs.", List.of());
+			List.of("electric"), List.of(new Ability("static", false), new Ability("lightning-rod", true)),
+			List.of(), "Possesses cheek sacs.", List.of());
 	}
 }

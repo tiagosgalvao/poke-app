@@ -16,10 +16,7 @@ import org.springframework.context.annotation.Import;
 import java.util.List;
 import java.util.Set;
 
-import static com.poke.localpokemon.domain.LocalPokemonFixtures.IMPORTED_AT;
-import static com.poke.localpokemon.domain.LocalPokemonFixtures.LATER;
-import static com.poke.localpokemon.domain.LocalPokemonFixtures.importedPikachu;
-import static com.poke.localpokemon.domain.LocalPokemonFixtures.pikachuProprietary;
+import static com.poke.localpokemon.domain.LocalPokemonFixtures.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase.Replace.NONE;
 
@@ -60,7 +57,7 @@ class JpaLocalPokemonRepositoryTest {
 	@Test
 	void keepsTheUpstreamOrderOfTypesAndAbilities() {
 		var charizard = LocalPokemon.importFrom(6, new UpstreamData("charizard", null, null, "Flame Pokemon", 905, 17,
-				List.of("fire", "flying"), List.of("blaze", "solar-power")), IMPORTED_AT);
+			List.of("fire", "flying"), List.of("blaze", "solar-power")), IMPORTED_AT);
 
 		repository.save(charizard);
 		entityManager.clear();
@@ -111,7 +108,7 @@ class JpaLocalPokemonRepositoryTest {
 	void pagesAreOrderedByNationalId() {
 		for (var id : List.of(7, 1, 4)) {
 			repository.save(LocalPokemon.importFrom(id, new UpstreamData("pokemon-" + id, null, null, null, 10, 5,
-					List.of(), List.of()), IMPORTED_AT));
+				List.of(), List.of()), IMPORTED_AT));
 		}
 		entityManager.clear();
 

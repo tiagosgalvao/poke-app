@@ -17,8 +17,7 @@ public final class ResourceUrls {
 		var lastSegment = withoutTrailingSlash.substring(withoutTrailingSlash.lastIndexOf(PATH_SEPARATOR) + 1);
 		try {
 			return Integer.parseInt(lastSegment);
-		}
-		catch (NumberFormatException notANumber) {
+		} catch (NumberFormatException notANumber) {
 			throw new MalformedPokeApiResponseException("PokeAPI resource url has no numeric id: " + url, notANumber);
 		}
 	}

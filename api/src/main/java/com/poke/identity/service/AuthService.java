@@ -1,14 +1,6 @@
 package com.poke.identity.service;
 
-import com.poke.identity.domain.AccessToken;
-import com.poke.identity.domain.EmailAlreadyRegisteredException;
-import com.poke.identity.domain.InvalidCredentialsException;
-import com.poke.identity.domain.PasswordHasher;
-import com.poke.identity.domain.RawPassword;
-import com.poke.identity.domain.TokenIssuer;
-import com.poke.identity.domain.User;
-import com.poke.identity.domain.UserRepository;
-import com.poke.identity.domain.UsernameAlreadyTakenException;
+import com.poke.identity.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,8 +39,8 @@ public class AuthService {
 	@Transactional(readOnly = true)
 	public AccessToken login(String username, RawPassword password) {
 		return users.findByUsername(normalized(username))
-				.filter(user -> hasher.matches(password, user.passwordHash()))
-				.map(tokenIssuer::issueFor)
-				.orElseThrow(InvalidCredentialsException::new);
+			.filter(user -> hasher.matches(password, user.passwordHash()))
+			.map(tokenIssuer::issueFor)
+			.orElseThrow(InvalidCredentialsException::new);
 	}
 }

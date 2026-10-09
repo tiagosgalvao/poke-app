@@ -3,18 +3,7 @@ package com.poke.localpokemon.entity;
 import com.poke.localpokemon.domain.LocalPokemon;
 import com.poke.localpokemon.domain.ProprietaryData;
 import com.poke.localpokemon.domain.UpstreamData;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OrderColumn;
-import jakarta.persistence.PostLoad;
-import jakarta.persistence.PostPersist;
-import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import org.hibernate.annotations.BatchSize;
 import org.springframework.data.domain.Persistable;
 
@@ -124,12 +113,12 @@ public class LocalPokemonEntity implements Persistable<Integer> {
 
 	public LocalPokemon toDomain() {
 		return new LocalPokemon(
-				id,
-				new UpstreamData(name, spriteUrl, imageUrl, category, weightHectograms, heightDecimetres, types, abilities),
-				new ProprietaryData(localizedName, region, habitat, tags, notes),
-				version,
-				syncedAt,
-				updatedAt);
+			id,
+			new UpstreamData(name, spriteUrl, imageUrl, category, weightHectograms, heightDecimetres, types, abilities),
+			new ProprietaryData(localizedName, region, habitat, tags, notes),
+			version,
+			syncedAt,
+			updatedAt);
 	}
 
 	private static void replace(List<String> target, List<String> values) {

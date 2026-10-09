@@ -6,11 +6,11 @@ public record ProprietaryPatch(String localizedName, String region, String habit
 
 	public ProprietaryData applyTo(ProprietaryData current) {
 		return new ProprietaryData(
-				valueOrCurrent(localizedName, current.localizedName()),
-				valueOrCurrent(region, current.region()),
-				valueOrCurrent(habitat, current.habitat()),
-				valueOrCurrent(tags, current.tags()),
-				valueOrCurrent(notes, current.notes()));
+			valueOrCurrent(localizedName, current.localizedName()),
+			valueOrCurrent(region, current.region()),
+			valueOrCurrent(habitat, current.habitat()),
+			valueOrCurrent(tags, current.tags()),
+			valueOrCurrent(notes, current.notes()));
 	}
 
 	private static <T> T valueOrCurrent(T value, T current) {

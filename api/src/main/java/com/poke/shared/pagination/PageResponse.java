@@ -7,10 +7,10 @@ public record PageResponse<T>(List<T> content, int page, int size, long totalEle
 
 	public static <D, T> PageResponse<T> from(Page<D> page, Function<? super D, ? extends T> toResponse) {
 		return new PageResponse<>(
-				page.content().stream().<T>map(toResponse).toList(),
-				page.page(),
-				page.size(),
-				page.totalElements(),
-				page.totalPages());
+			page.content().stream().<T>map(toResponse).toList(),
+			page.page(),
+			page.size(),
+			page.totalElements(),
+			page.totalPages());
 	}
 }

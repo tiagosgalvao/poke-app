@@ -42,13 +42,13 @@ class PokemonSummaryTest {
 	@Test
 	void rejectsInvalidIdentityAndMeasures() {
 		assertThatThrownBy(() -> new PokemonSummary(0, "x", null, null, 1, 1, List.of(), List.of()))
-				.isInstanceOf(DomainValidationException.class);
+			.isInstanceOf(DomainValidationException.class);
 		assertThatThrownBy(() -> new PokemonSummary(1, " ", null, null, 1, 1, List.of(), List.of()))
-				.isInstanceOf(DomainValidationException.class);
+			.isInstanceOf(DomainValidationException.class);
 		assertThatThrownBy(() -> new PokemonSummary(1, "x", null, null, -1, 1, List.of(), List.of()))
-				.isInstanceOf(DomainValidationException.class);
+			.isInstanceOf(DomainValidationException.class);
 		assertThatThrownBy(() -> new PokemonSummary(1, "x", null, null, 1, -1, List.of(), List.of()))
-				.isInstanceOf(DomainValidationException.class);
+			.isInstanceOf(DomainValidationException.class);
 	}
 
 	private static PokemonSummary pikachu(List<String> types, List<Ability> abilities) {

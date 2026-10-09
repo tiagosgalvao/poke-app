@@ -19,11 +19,7 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static com.poke.catalog.client.PokeApiFixtures.stubFixture;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -68,38 +64,38 @@ class PokeAppEndToEndTest {
 		stubFixture(pokeApi, "/pokemon-species/386/", "pokemon-species-386.json");
 
 		mvc.perform(post(REGISTER).contentType(APPLICATION_JSON)
-						.content("{\"username\":\"%s\",\"email\":\"e2e@poke.app\",\"password\":\"%s\"}".formatted(TRAINER, PASSWORD)))
-				.andExpect(status().isCreated());
+				.content("{\"username\":\"%s\",\"email\":\"e2e@poke.app\",\"password\":\"%s\"}".formatted(TRAINER, PASSWORD)))
+			.andExpect(status().isCreated());
 		var token = loginToken();
 
 		mvc.perform(post(LOCAL_POKEMON).contentType(APPLICATION_JSON).content("{\"idOrName\":\"10001\"}"))
-				.andExpect(status().isUnauthorized());
+			.andExpect(status().isUnauthorized());
 
 		mvc.perform(authorized(post(LOCAL_POKEMON), token).content("{\"idOrName\":\"10001\"}"))
-				.andExpect(status().isCreated())
-				.andExpect(jsonPath("$.name").value("deoxys-attack"))
-				.andExpect(jsonPath("$.category").value("DNA Pokémon"))
-				.andExpect(jsonPath("$.version").value(0));
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.name").value("deoxys-attack"))
+			.andExpect(jsonPath("$.category").value("DNA Pokémon"))
+			.andExpect(jsonPath("$.version").value(0));
 		mvc.perform(authorized(post(LOCAL_POKEMON), token).content("{\"idOrName\":\"10001\"}"))
-				.andExpect(status().isConflict());
+			.andExpect(status().isConflict());
 
 		mvc.perform(authorized(patch(DEOXYS_ATTACK), token).content("{\"version\":0,\"region\":\"Hoenn\",\"tags\":[\"mythical\"]}"))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.version").value(1));
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.version").value(1));
 		mvc.perform(authorized(patch(DEOXYS_ATTACK), token).content("{\"version\":0,\"region\":\"Kanto\"}"))
-				.andExpect(status().isConflict());
+			.andExpect(status().isConflict());
 		mvc.perform(authorized(put(DEOXYS_ATTACK), token).content("{\"version\":1,\"localizedName\":\"  \"}"))
-				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.fieldErrors[0].field").value("localizedName"));
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.fieldErrors[0].field").value("localizedName"));
 
 		mvc.perform(authorized(post(LOCAL_POKEMON + "/sync"), token).content("{\"ids\":[10001,99999]}"))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.refreshed[0]").value(10001))
-				.andExpect(jsonPath("$.failed[0]").value(99999));
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.refreshed[0]").value(10001))
+			.andExpect(jsonPath("$.failed[0]").value(99999));
 		mvc.perform(get(DEOXYS_ATTACK))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.region").value("Hoenn"))
-				.andExpect(jsonPath("$.tags[0]").value("mythical"));
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.region").value("Hoenn"))
+			.andExpect(jsonPath("$.tags[0]").value("mythical"));
 
 		mvc.perform(authorized(delete(DEOXYS_ATTACK), token)).andExpect(status().isNoContent());
 		mvc.perform(get(DEOXYS_ATTACK)).andExpect(status().isNotFound());
@@ -118,14 +114,14 @@ class PokeAppEndToEndTest {
 	@Test
 	void wrongCredentialsAreUnauthorized() throws Exception {
 		mvc.perform(post(LOGIN).contentType(APPLICATION_JSON).content("{\"username\":\"ash\",\"password\":\"NotHisPassword1\"}"))
-				.andExpect(status().isUnauthorized());
+			.andExpect(status().isUnauthorized());
 	}
 
 	private String loginToken() throws Exception {
 		var body = mvc.perform(post(LOGIN).contentType(APPLICATION_JSON)
-						.content("{\"username\":\"%s\",\"password\":\"%s\"}".formatted(TRAINER, PASSWORD)))
-				.andExpect(status().isOk())
-				.andReturn().getResponse().getContentAsString();
+				.content("{\"username\":\"%s\",\"password\":\"%s\"}".formatted(TRAINER, PASSWORD)))
+			.andExpect(status().isOk())
+			.andReturn().getResponse().getContentAsString();
 		return jsonMapper.readTree(body).get("accessToken").asString();
 	}
 

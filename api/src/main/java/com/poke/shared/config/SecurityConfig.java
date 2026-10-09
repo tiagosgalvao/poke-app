@@ -20,7 +20,7 @@ public class SecurityConfig {
 	private static final String API = "/api/v1/**";
 	private static final String AUTH_API = "/api/v1/auth/**";
 	private static final String[] PUBLIC_INFRASTRUCTURE = {
-			"/actuator/health/**", "/actuator/info", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/error"};
+		"/actuator/health/**", "/actuator/info", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/error"};
 
 	@Bean
 	ProblemDetailSecurityHandler problemDetailSecurityHandler(JsonMapper jsonMapper) {
@@ -30,20 +30,20 @@ public class SecurityConfig {
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http, ProblemDetailSecurityHandler problemHandler) {
 		return http
-				.csrf(AbstractHttpConfigurer::disable)
-				.sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
-				.authorizeHttpRequests(requests -> requests
-						.requestMatchers(PUBLIC_INFRASTRUCTURE).permitAll()
-						.requestMatchers(GET, API).permitAll()
-						.requestMatchers(POST, AUTH_API).permitAll()
-						.anyRequest().authenticated())
-				.oauth2ResourceServer(resourceServer -> resourceServer
-						.jwt(Customizer.withDefaults())
-						.authenticationEntryPoint(problemHandler)
-						.accessDeniedHandler(problemHandler))
-				.exceptionHandling(exceptions -> exceptions
-						.authenticationEntryPoint(problemHandler)
-						.accessDeniedHandler(problemHandler))
-				.build();
+			.csrf(AbstractHttpConfigurer::disable)
+			.sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
+			.authorizeHttpRequests(requests -> requests
+				.requestMatchers(PUBLIC_INFRASTRUCTURE).permitAll()
+				.requestMatchers(GET, API).permitAll()
+				.requestMatchers(POST, AUTH_API).permitAll()
+				.anyRequest().authenticated())
+			.oauth2ResourceServer(resourceServer -> resourceServer
+				.jwt(Customizer.withDefaults())
+				.authenticationEntryPoint(problemHandler)
+				.accessDeniedHandler(problemHandler))
+			.exceptionHandling(exceptions -> exceptions
+				.authenticationEntryPoint(problemHandler)
+				.accessDeniedHandler(problemHandler))
+			.build();
 	}
 }

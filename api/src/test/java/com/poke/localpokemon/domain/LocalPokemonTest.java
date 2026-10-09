@@ -6,14 +6,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static com.poke.localpokemon.domain.LocalPokemonFixtures.IMPORTED_AT;
-import static com.poke.localpokemon.domain.LocalPokemonFixtures.LATER;
-import static com.poke.localpokemon.domain.LocalPokemonFixtures.importedPikachu;
-import static com.poke.localpokemon.domain.LocalPokemonFixtures.pikachuProprietary;
-import static com.poke.localpokemon.domain.LocalPokemonFixtures.pikachuUpstream;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatNoException;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static com.poke.localpokemon.domain.LocalPokemonFixtures.*;
+import static org.assertj.core.api.Assertions.*;
 
 class LocalPokemonTest {
 
@@ -61,28 +55,28 @@ class LocalPokemonTest {
 	@Test
 	void rejectsAStaleVersionAsAConflict() {
 		assertThatThrownBy(() -> importedPikachu().checkVersion(3))
-				.isInstanceOf(StaleVersionException.class)
-				.isInstanceOf(ConflictException.class)
-				.hasMessageContaining("25");
+			.isInstanceOf(StaleVersionException.class)
+			.isInstanceOf(ConflictException.class)
+			.hasMessageContaining("25");
 	}
 
 	@Test
 	void rejectsInvalidState() {
 		assertThatThrownBy(() -> LocalPokemon.importFrom(0, pikachuUpstream(), IMPORTED_AT))
-				.isInstanceOf(DomainValidationException.class);
+			.isInstanceOf(DomainValidationException.class);
 		assertThatThrownBy(() -> LocalPokemon.importFrom(25, null, IMPORTED_AT))
-				.isInstanceOf(DomainValidationException.class);
+			.isInstanceOf(DomainValidationException.class);
 		assertThatThrownBy(() -> LocalPokemon.importFrom(25, pikachuUpstream(), null))
-				.isInstanceOf(DomainValidationException.class);
+			.isInstanceOf(DomainValidationException.class);
 		assertThatThrownBy(() -> new LocalPokemon(25, pikachuUpstream(), ProprietaryData.NONE, -1, IMPORTED_AT, IMPORTED_AT))
-				.isInstanceOf(DomainValidationException.class);
+			.isInstanceOf(DomainValidationException.class);
 	}
 
 	@Test
 	void notFoundAndDuplicateErrorsNameThePokemon() {
 		assertThat(new LocalPokemonNotFoundException(25)).hasMessageContaining("25");
 		assertThat(new LocalPokemonAlreadyExistsException(25))
-				.isInstanceOf(ConflictException.class)
-				.hasMessageContaining("25");
+			.isInstanceOf(ConflictException.class)
+			.hasMessageContaining("25");
 	}
 }

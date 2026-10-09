@@ -3,11 +3,7 @@ package com.poke.localpokemon.domain;
 import com.poke.shared.exception.DomainValidationException;
 import com.poke.shared.validation.Require;
 
-import java.util.Collections;
-import java.util.Locale;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
 public record ProprietaryData(String localizedName, String region, String habitat, Set<String> tags, String notes) {
 

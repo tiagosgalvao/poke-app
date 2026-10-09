@@ -1,10 +1,6 @@
 package com.poke.catalog.service;
 
-import com.poke.catalog.domain.PokemonCatalog;
-import com.poke.catalog.domain.PokemonDetail;
-import com.poke.catalog.domain.PokemonKey;
-import com.poke.catalog.domain.PokemonNotFoundException;
-import com.poke.catalog.domain.PokemonSummary;
+import com.poke.catalog.domain.*;
 import com.poke.shared.exception.DomainValidationException;
 import com.poke.shared.pagination.Page;
 import com.poke.shared.pagination.PageRequest;
@@ -29,6 +25,6 @@ public class CatalogService {
 	public PokemonDetail getDetail(String idOrName) {
 		var key = PokemonKey.parse(idOrName);
 		return catalog.findDetail(key.value())
-				.orElseThrow(() -> new PokemonNotFoundException(key.value()));
+			.orElseThrow(() -> new PokemonNotFoundException(key.value()));
 	}
 }

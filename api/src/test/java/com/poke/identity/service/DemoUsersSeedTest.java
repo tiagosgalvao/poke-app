@@ -27,6 +27,6 @@ class DemoUsersSeedTest {
 	@Test
 	void theDemoUsersRejectOtherPasswords() {
 		assertThatThrownBy(() -> authService.login("ash", new RawPassword("Admin123!")))
-				.isInstanceOf(InvalidCredentialsException.class);
+			.isInstanceOf(InvalidCredentialsException.class);
 	}
 }

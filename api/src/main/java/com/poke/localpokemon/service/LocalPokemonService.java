@@ -4,15 +4,7 @@ import com.poke.catalog.domain.Ability;
 import com.poke.catalog.domain.PokemonDetail;
 import com.poke.catalog.domain.PokemonNotFoundException;
 import com.poke.catalog.service.CatalogService;
-import com.poke.localpokemon.domain.LocalPokemon;
-import com.poke.localpokemon.domain.LocalPokemonAlreadyExistsException;
-import com.poke.localpokemon.domain.LocalPokemonNotFoundException;
-import com.poke.localpokemon.domain.LocalPokemonRepository;
-import com.poke.localpokemon.domain.ProprietaryData;
-import com.poke.localpokemon.domain.ProprietaryPatch;
-import com.poke.localpokemon.domain.SyncBatch;
-import com.poke.localpokemon.domain.SyncSummary;
-import com.poke.localpokemon.domain.UpstreamData;
+import com.poke.localpokemon.domain.*;
 import com.poke.shared.pagination.Page;
 import com.poke.shared.pagination.PageRequest;
 import org.springframework.stereotype.Service;
@@ -87,13 +79,11 @@ public class LocalPokemonService {
 				if (existing.isPresent()) {
 					repository.save(existing.get().refreshedWith(upstream, clock.instant()));
 					refreshed.add(id);
-				}
-				else {
+				} else {
 					repository.save(LocalPokemon.importFrom(id, upstream, clock.instant()));
 					created.add(id);
 				}
-			}
-			catch (PokemonNotFoundException unknownUpstream) {
+			} catch (PokemonNotFoundException unknownUpstream) {
 				failed.add(id);
 			}
 		}
@@ -102,13 +92,13 @@ public class LocalPokemonService {
 
 	static UpstreamData upstreamOf(PokemonDetail detail) {
 		return new UpstreamData(
-				detail.name(),
-				detail.spriteUrl(),
-				detail.imageUrl(),
-				detail.category(),
-				detail.weightHectograms(),
-				detail.heightDecimetres(),
-				detail.types(),
-				detail.abilities().stream().map(Ability::name).toList());
+			detail.name(),
+			detail.spriteUrl(),
+			detail.imageUrl(),
+			detail.category(),
+			detail.weightHectograms(),
+			detail.heightDecimetres(),
+			detail.types(),
+			detail.abilities().stream().map(Ability::name).toList());
 	}
 }

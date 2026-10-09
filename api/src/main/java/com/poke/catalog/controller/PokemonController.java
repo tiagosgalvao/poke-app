@@ -5,11 +5,7 @@ import com.poke.catalog.controller.PokemonResponses.PokemonSummaryResponse;
 import com.poke.catalog.service.CatalogService;
 import com.poke.shared.pagination.PageRequest;
 import com.poke.shared.pagination.PageResponse;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/pokemon")
@@ -26,8 +22,8 @@ class PokemonController {
 
 	@GetMapping
 	PageResponse<PokemonSummaryResponse> browse(
-			@RequestParam(defaultValue = FIRST_PAGE) int page,
-			@RequestParam(defaultValue = DEFAULT_PAGE_SIZE) int size) {
+		@RequestParam(defaultValue = FIRST_PAGE) int page,
+		@RequestParam(defaultValue = DEFAULT_PAGE_SIZE) int size) {
 		return PageResponse.from(catalogService.browse(new PageRequest(page, size)), PokemonSummaryResponse::from);
 	}
 

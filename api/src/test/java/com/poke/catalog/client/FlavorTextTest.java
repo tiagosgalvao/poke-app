@@ -11,7 +11,7 @@ class FlavorTextTest {
 		var raw = "When several of\nthese POKéMON\ngather, their\felectricity could\nbuild and cause\nlightning storms.";
 
 		assertThat(FlavorText.normalize(raw))
-				.isEqualTo("When several of these POKéMON gather, their electricity could build and cause lightning storms.");
+			.isEqualTo("When several of these POKéMON gather, their electricity could build and cause lightning storms.");
 	}
 
 	@Test

@@ -27,11 +27,11 @@ public class OpenApiConfig {
 	@Bean
 	OpenAPI pokeAppOpenApi() {
 		return new OpenAPI()
-				.info(new Info().title(TITLE).description(DESCRIPTION).version(VERSION))
-				.components(new Components().addSecuritySchemes(BEARER_AUTH, new SecurityScheme()
-						.type(SecurityScheme.Type.HTTP)
-						.scheme(BEARER)
-						.bearerFormat(JWT)));
+			.info(new Info().title(TITLE).description(DESCRIPTION).version(VERSION))
+			.components(new Components().addSecuritySchemes(BEARER_AUTH, new SecurityScheme()
+				.type(SecurityScheme.Type.HTTP)
+				.scheme(BEARER)
+				.bearerFormat(JWT)));
 	}
 
 	@Bean

@@ -37,12 +37,12 @@ public class JwtTokenIssuer implements TokenIssuer {
 		var issuedAt = clock.instant().truncatedTo(SECONDS);
 		var expiresAt = issuedAt.plus(tokenTtl);
 		var claims = JwtClaimsSet.builder()
-				.issuer(ISSUER)
-				.subject(user.username())
-				.claim(USER_ID_CLAIM, user.id().toString())
-				.issuedAt(issuedAt)
-				.expiresAt(expiresAt)
-				.build();
+			.issuer(ISSUER)
+			.subject(user.username())
+			.claim(USER_ID_CLAIM, user.id().toString())
+			.issuedAt(issuedAt)
+			.expiresAt(expiresAt)
+			.build();
 		var token = encoder.encode(JwtEncoderParameters.from(JwsHeader.with(HS256).build(), claims));
 		return new AccessToken(token.getTokenValue(), expiresAt);
 	}

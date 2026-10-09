@@ -1,14 +1,6 @@
 package com.poke.identity.service;
 
-import com.poke.identity.domain.AccessToken;
-import com.poke.identity.domain.EmailAlreadyRegisteredException;
-import com.poke.identity.domain.InvalidCredentialsException;
-import com.poke.identity.domain.PasswordHasher;
-import com.poke.identity.domain.RawPassword;
-import com.poke.identity.domain.TokenIssuer;
-import com.poke.identity.domain.User;
-import com.poke.identity.domain.UserRepository;
-import com.poke.identity.domain.UsernameAlreadyTakenException;
+import com.poke.identity.domain.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,9 +15,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -68,7 +58,7 @@ class AuthServiceTest {
 		when(users.existsByUsername("ash")).thenReturn(true);
 
 		assertThatThrownBy(() -> service.register("ASH", "new@pallet.town", PASSWORD))
-				.isInstanceOf(UsernameAlreadyTakenException.class);
+			.isInstanceOf(UsernameAlreadyTakenException.class);
 		verify(users, never()).save(any());
 	}
 
@@ -77,7 +67,7 @@ class AuthServiceTest {
 		when(users.existsByEmail("ash@pallet.town")).thenReturn(true);
 
 		assertThatThrownBy(() -> service.register("ash2", "ASH@pallet.town", PASSWORD))
-				.isInstanceOf(EmailAlreadyRegisteredException.class);
+			.isInstanceOf(EmailAlreadyRegisteredException.class);
 		verify(users, never()).save(any());
 	}
 
@@ -100,9 +90,9 @@ class AuthServiceTest {
 		when(users.findByUsername("gary")).thenReturn(Optional.empty());
 
 		assertThatThrownBy(() -> service.login("ash", PASSWORD)).isInstanceOf(InvalidCredentialsException.class)
-				.hasMessage("Invalid username or password");
+			.hasMessage("Invalid username or password");
 		assertThatThrownBy(() -> service.login("gary", PASSWORD)).isInstanceOf(InvalidCredentialsException.class)
-				.hasMessage("Invalid username or password");
+			.hasMessage("Invalid username or password");
 		verify(tokenIssuer, never()).issueFor(any());
 	}
 }

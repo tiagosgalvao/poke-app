@@ -7,7 +7,7 @@ import java.time.Duration;
 
 @ConfigurationProperties("poke.pokeapi")
 public record PokeApiProperties(
-		@DefaultValue("https://pokeapi.co/api/v2") String baseUrl,
-		@DefaultValue("2s") Duration connectTimeout,
-		@DefaultValue("5s") Duration readTimeout) {
+	@DefaultValue("https://pokeapi.co/api/v2") String baseUrl,
+	@DefaultValue("2s") Duration connectTimeout,
+	@DefaultValue("5s") Duration readTimeout) {
 }

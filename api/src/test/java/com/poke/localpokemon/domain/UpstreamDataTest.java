@@ -35,10 +35,10 @@ class UpstreamDataTest {
 	@Test
 	void rejectsABlankNameAndNegativeMeasures() {
 		assertThatThrownBy(() -> new UpstreamData(" ", null, null, null, 60, 4, List.of(), List.of()))
-				.isInstanceOf(DomainValidationException.class);
+			.isInstanceOf(DomainValidationException.class);
 		assertThatThrownBy(() -> new UpstreamData("pikachu", null, null, null, -1, 4, List.of(), List.of()))
-				.isInstanceOf(DomainValidationException.class);
+			.isInstanceOf(DomainValidationException.class);
 		assertThatThrownBy(() -> new UpstreamData("pikachu", null, null, null, 60, -1, List.of(), List.of()))
-				.isInstanceOf(DomainValidationException.class);
+			.isInstanceOf(DomainValidationException.class);
 	}
 }

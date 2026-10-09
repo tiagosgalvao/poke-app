@@ -17,7 +17,7 @@ public record User(UUID id, String username, String email, String passwordHash, 
 		Require.present(id, "id");
 		if (username == null || !USERNAME.matcher(username).matches()) {
 			throw new DomainValidationException(
-					"username must be 3 to 30 lowercase letters, digits, dots, hyphens or underscores");
+				"username must be 3 to 30 lowercase letters, digits, dots, hyphens or underscores");
 		}
 		if (email == null || !EMAIL.matcher(email).matches()) {
 			throw new DomainValidationException("email must be a valid address");

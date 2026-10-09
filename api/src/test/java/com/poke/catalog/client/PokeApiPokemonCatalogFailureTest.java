@@ -18,11 +18,11 @@ class PokeApiPokemonCatalogFailureTest {
 	void anUnexpectedFailureWhileFetchingAPageBecomesUnavailable() {
 		var client = mock(PokeApiClient.class);
 		when(client.list(0, 1)).thenReturn(new PokemonListDto(1, List.of(
-				new NamedResource("bulbasaur", "https://pokeapi.co/api/v2/pokemon/1/"))));
+			new NamedResource("bulbasaur", "https://pokeapi.co/api/v2/pokemon/1/"))));
 		when(client.pokemon("1")).thenThrow(new IllegalStateException("connection pool exhausted"));
 
 		assertThatThrownBy(() -> new PokeApiPokemonCatalog(client).findPage(new PageRequest(0, 1)))
-				.isInstanceOf(ExternalServiceUnavailableException.class)
-				.hasCauseInstanceOf(IllegalStateException.class);
+			.isInstanceOf(ExternalServiceUnavailableException.class)
+			.hasCauseInstanceOf(IllegalStateException.class);
 	}
 }

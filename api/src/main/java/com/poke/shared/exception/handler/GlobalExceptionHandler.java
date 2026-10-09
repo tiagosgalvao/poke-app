@@ -1,10 +1,6 @@
 package com.poke.shared.exception.handler;
 
-import com.poke.shared.exception.ConflictException;
-import com.poke.shared.exception.DomainValidationException;
-import com.poke.shared.exception.ExternalServiceUnavailableException;
-import com.poke.shared.exception.NotFoundException;
-import com.poke.shared.exception.UnauthorizedException;
+import com.poke.shared.exception.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -17,12 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.CONFLICT;
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+import static org.springframework.http.HttpStatus.*;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
@@ -62,12 +53,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
 	@Override
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(
-			MethodArgumentNotValidException exception, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+		MethodArgumentNotValidException exception, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		var problem = exception.getBody();
 		problem.setDetail(VALIDATION_FAILED);
 		problem.setProperty(FIELD_ERRORS, exception.getBindingResult().getFieldErrors().stream()
-				.map(error -> new FieldErrorResponse(error.getField(), error.getDefaultMessage()))
-				.toList());
+			.map(error -> new FieldErrorResponse(error.getField(), error.getDefaultMessage()))
+			.toList());
 		return handleExceptionInternal(exception, problem, headers, status, request);
 	}
 

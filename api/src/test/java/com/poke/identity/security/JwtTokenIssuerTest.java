@@ -7,11 +7,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.security.oauth2.jwt.JwtValidationException;
 
+import javax.crypto.SecretKey;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import javax.crypto.SecretKey;
 
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class JwtTokenIssuerTest {
 
 	private static final SecurityProperties PROPERTIES =
-			new SecurityProperties("a-test-secret-that-is-at-least-32-bytes-long", Duration.ofHours(2));
+		new SecurityProperties("a-test-secret-that-is-at-least-32-bytes-long", Duration.ofHours(2));
 	private static final User ASH = User.register("ash", "ash@pallet.town", "hash", Instant.parse("2026-10-08T10:00:00Z"));
 
 	private final JwtConfig jwtConfig = new JwtConfig();
@@ -43,7 +43,7 @@ class JwtTokenIssuerTest {
 	@Test
 	void expiredTokensAreRejected() {
 		var issuedLongAgo = new JwtTokenIssuer(jwtConfig.jwtEncoder(key), PROPERTIES,
-				Clock.fixed(Instant.now().minus(Duration.ofDays(1)), ZoneOffset.UTC));
+			Clock.fixed(Instant.now().minus(Duration.ofDays(1)), ZoneOffset.UTC));
 
 		var token = issuedLongAgo.issueFor(ASH);
 
@@ -56,6 +56,6 @@ class JwtTokenIssuerTest {
 		var forged = new JwtTokenIssuer(jwtConfig.jwtEncoder(otherKey), PROPERTIES, Clock.systemUTC()).issueFor(ASH);
 
 		assertThatThrownBy(() -> jwtConfig.jwtDecoder(key).decode(forged.value()))
-				.isInstanceOf(BadJwtException.class);
+			.isInstanceOf(BadJwtException.class);
 	}
 }
