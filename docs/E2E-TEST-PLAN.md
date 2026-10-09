@@ -61,6 +61,8 @@ npm run report                   # opens the last HTML report (traces and videos
 
 `BASE_URL` points the tests at another stack (default `http://localhost:3000`).
 
+In CI, `.github/workflows/e2e.yml` does the same on a GitHub runner: it starts the stack with `docker compose up --build --wait`, runs `npm test` (the `checks` project, with one retry), and uploads the HTML report, traces and service logs if anything fails. The narrated `demo` project never runs in CI.
+
 ## Demo chapters and recordings
 
 The demo is a separate Playwright project (`demo`, in `e2e/demo/`), apart from the regression checks (`checks`, in `e2e/tests/`). It replays the demo script as three narrated chapters:
@@ -89,4 +91,4 @@ The chapters keep their assertions, so a broken flow fails the recording instead
 | Hide the *My Pokedex* link from visitors (app change before recording) | 6.8 | Done |
 | Fix: logging out on a protected page landed on login instead of home (found by `auth.spec.ts`) | 6.9 | Done |
 | Catalog, auth and My Pokedex flows (11 tests), plus three narrated demo chapters (balloons, highlight, cursor) recorded as MP4 in `docs/demo/` | 6.10 | Done |
-| Run the flows in CI against the compose stack | | To decide |
+| Run the checks in CI against the compose stack (`.github/workflows/e2e.yml`) | 6.11 | Done |

@@ -337,7 +337,7 @@ TDD workflow: write a failing test, make it pass, then refactor. Commit history 
 
 Coverage comes from JaCoCo. `./gradlew build` runs `jacocoTestCoverageVerification`, which fails the build below **95% line / 90% branch** coverage (excluding the `main` class). It currently sits at about 99% line / 97% branch.
 
-CI (GitHub Actions) runs the same checks: `.github/workflows/api.yml` runs `./gradlew build` on Temurin 25, with Docker available for Testcontainers, and `.github/workflows/web.yml` runs `npm run lint`, `npm test` and `npm run build` on Node 24. Each runs only when its folder changes.
+CI (GitHub Actions) runs the same checks: `.github/workflows/api.yml` runs `./gradlew build` on Temurin 25, with Docker available for Testcontainers, and `.github/workflows/web.yml` runs `npm run lint`, `npm test` and `npm run build` on Node 24. `.github/workflows/e2e.yml` starts the compose stack and runs the Playwright checks (`e2e/`, project `checks`) against it. Each workflow runs only when the folders it covers change, and can also be started by hand (`workflow_dispatch`).
 
 ## 11. Runtime topology
 

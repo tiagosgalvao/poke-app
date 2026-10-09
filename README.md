@@ -1,6 +1,6 @@
 # Poke App
 
-[![api](https://github.com/tiagosgalvao/poke-app/actions/workflows/api.yml/badge.svg)](https://github.com/tiagosgalvao/poke-app/actions/workflows/api.yml) [![web](https://github.com/tiagosgalvao/poke-app/actions/workflows/web.yml/badge.svg)](https://github.com/tiagosgalvao/poke-app/actions/workflows/web.yml)
+[![api](https://github.com/tiagosgalvao/poke-app/actions/workflows/api.yml/badge.svg)](https://github.com/tiagosgalvao/poke-app/actions/workflows/api.yml) [![web](https://github.com/tiagosgalvao/poke-app/actions/workflows/web.yml/badge.svg)](https://github.com/tiagosgalvao/poke-app/actions/workflows/web.yml) [![e2e](https://github.com/tiagosgalvao/poke-app/actions/workflows/e2e.yml/badge.svg)](https://github.com/tiagosgalvao/poke-app/actions/workflows/e2e.yml)
 
 A full-stack Pokemon application. It has a **Java / Spring Boot REST API** that integrates with [PokeAPI](https://pokeapi.co/docs/v2) and keeps a local relational replica that can be enriched with proprietary data, and a **React** web client that consumes the API.
 
@@ -161,7 +161,7 @@ With the stack running, `cd e2e && npm install && npx playwright install chromiu
 
 `scripts/smoke-test.sh` runs the demo flow against it through the nginx proxy: catalog, detail, auth, sync, update, import and delete, plus the 400/401/404/409 paths. It needs `curl` and `jq`.
 
-GitHub Actions runs the same checks on every push to `main` and on pull requests. `api.yml` runs the Gradle build with the coverage gate and uploads the test and JaCoCo reports. `web.yml` runs lint, tests and the production build. Each workflow only runs when its own folder changes.
+GitHub Actions runs the same checks on every push to `main` and on pull requests. `api.yml` runs the Gradle build with the coverage gate and uploads the test and JaCoCo reports. `web.yml` runs lint, tests and the production build. `e2e.yml` starts the whole stack with Docker Compose and runs the 11 Playwright checks against it, uploading the report if anything fails. Each workflow only runs when the folders it covers change, and each can also be started by hand from the Actions tab (`gh workflow run <name>.yml`).
 
 ## Documentation
 
@@ -183,7 +183,7 @@ api/                 Spring Boot service, feature-first: catalog · localpokemon
 web/                 React SPA: features/catalog · features/local-pokemon · features/auth
 docs/                design docs and screenshots
 docker-compose.yml   postgres + redis + api + web
-.github/workflows/   CI: api.yml and web.yml
+.github/workflows/   CI: api.yml, web.yml and e2e.yml
 scripts/             smoke-test.sh, the end-to-end check against a running stack
 e2e/                 Playwright: regression flows (tests/) and narrated demo chapters (demo/) recorded into docs/demo/
 ```
