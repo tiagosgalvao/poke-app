@@ -333,6 +333,7 @@ TDD workflow: write a failing test, make it pass, then refactor. Commit history 
 | End-to-end | `@SpringBootTest` + Testcontainers (Postgres, Redis) + WireMock | Register → login → sync → update → error paths; a cache hit on the second call |
 | Architecture | ArchUnit | Dependency rule and feature isolation ([§4](#4-backend-architecture-feature-first-clean-architecture)) |
 | Web | Vitest + Testing Library + MSW | Catalog renders and paginates, login flow, edit form validation and server errors |
+| Browser end-to-end | Playwright against the compose stack (`e2e/`) | The demo flows in a real browser through nginx, with a console guard. Also records the demo videos. See [E2E-TEST-PLAN.md](E2E-TEST-PLAN.md) |
 
 Coverage comes from JaCoCo. `./gradlew build` runs `jacocoTestCoverageVerification`, which fails the build below **95% line / 90% branch** coverage (excluding the `main` class). It currently sits at about 99% line / 97% branch.
 

@@ -16,8 +16,9 @@ The design is in `docs/ARCHITECTURE.md` and the reasons behind it are in `docs/D
 ```
 api/   Spring Boot 4.1 · Java 25 · Gradle Kotlin DSL   (package root: com.poke, feature-first)
 web/   React 19 · TypeScript · Vite 8 · Tailwind 4
-docs/  ARCHITECTURE.md (design), DECISIONS.md (decision log), POKEAPI.md (upstream reference), CONVENTIONS.md (commits, code style, best practices), ROADMAP.md (numbered tasks), GENAI.md (GenAI write-up), screenshots/
+docs/  ARCHITECTURE.md (design), DECISIONS.md (decision log), POKEAPI.md (upstream reference), CONVENTIONS.md (commits, code style, best practices), ROADMAP.md (numbered tasks), GENAI.md (GenAI write-up), E2E-TEST-PLAN.md (browser flows), screenshots/, demo/ (recordings)
 docker-compose.yml   postgres:17 + redis:8 + api + web (nginx on :3000, proxies /api to the api service)
+e2e/                 Playwright browser flows against the compose stack (see docs/E2E-TEST-PLAN.md)
 .github/workflows/   CI: api.yml (gradle build + coverage gate), web.yml (lint, test, build), path-filtered
 settings.gradle.kts  composite build including api/, so IDEs import Gradle from the repo root
 ```
@@ -30,6 +31,10 @@ docker compose up --build
 
 # end-to-end check against the running stack (curl + jq)
 scripts/smoke-test.sh
+
+# browser flows with Playwright against the running stack (run from e2e/)
+npm test                     # headless
+npm run demo                 # visible, slowed down, records docs/demo/*.webm
 
 # infrastructure only, for local dev
 docker compose up -d postgres redis

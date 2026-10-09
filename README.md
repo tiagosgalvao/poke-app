@@ -147,7 +147,9 @@ cd web && npm run lint && npm run build
 
 Docker must be running for the API tests (Testcontainers).
 
-With the stack running, `scripts/smoke-test.sh` runs the demo flow against it through the nginx proxy: catalog, detail, auth, sync, update, import and delete, plus the 400/401/404/409 paths. It needs `curl` and `jq`.
+With the stack running, `cd e2e && npm install && npx playwright install chromium && npm test` runs the browser flows with Playwright. `npm run demo` runs them in a visible browser and records them into [docs/demo/](docs/demo/). The flows are described in the [end-to-end test plan](docs/E2E-TEST-PLAN.md).
+
+`scripts/smoke-test.sh` runs the demo flow against it through the nginx proxy: catalog, detail, auth, sync, update, import and delete, plus the 400/401/404/409 paths. It needs `curl` and `jq`.
 
 GitHub Actions runs the same checks on every push to `main` and on pull requests. `api.yml` runs the Gradle build with the coverage gate and uploads the test and JaCoCo reports. `web.yml` runs lint, tests and the production build. Each workflow only runs when its own folder changes.
 
@@ -160,6 +162,7 @@ GitHub Actions runs the same checks on every push to `main` and on pull requests
 - [PokeAPI reference](docs/POKEAPI.md): upstream endpoints, mapping and quirks
 - [Roadmap](docs/ROADMAP.md): numbered tasks, one commit each, and the demo script
 - [Conventions](docs/CONVENTIONS.md): commit format, code style and best practices
+- [End-to-end test plan](docs/E2E-TEST-PLAN.md): the Playwright browser flows and the demo recordings
 - [GenAI](docs/GENAI.md): the task-management API prompt exercise, and how AI was used (and corrected) on this project
 - [CLAUDE.md](CLAUDE.md): working agreement for AI-assisted development
 
@@ -172,4 +175,5 @@ docs/                design docs and screenshots
 docker-compose.yml   postgres + redis + api + web
 .github/workflows/   CI: api.yml and web.yml
 scripts/             smoke-test.sh, the end-to-end check against a running stack
+e2e/                 Playwright browser flows; npm run demo records them into docs/demo/
 ```
