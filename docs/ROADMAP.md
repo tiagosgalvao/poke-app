@@ -90,6 +90,12 @@ All Phase 3 code lives in `com.poke.identity`.
   - A `Narrator` overlay shows a balloon beside each element in use, outlines it, and moves a cursor dot to each click.
   - The chapters are recorded and converted with ffmpeg to MP4 (H.264) under `docs/demo/`. The README shows them as clickable thumbnails.
 - [x] **6.11 e2e in ci**: `.github/workflows/e2e.yml` builds and starts the compose stack, runs the 11 Playwright checks, and uploads the report and service logs on failure. It runs on pushes and pull requests that touch `api/`, `web/`, `e2e/` or `docker-compose.yml`. All three workflows (`api`, `web`, `e2e`) can also be started by hand (`workflow_dispatch`)
+- [x] **6.12 genai write-up refresh**: `docs/GENAI.md` Part 2 updated:
+  - every decision that was challenged or steered, in a table linked to `DECISIONS.md` and the roadmap: monorepo, minimal JWT, feature-first, naming, validation, virtual threads, MapStruct, hiding *My Pokedex* from visitors, keeping the "Pokedex" term, narrated demo videos, e2e in CI;
+  - the newer AI corrections: the logout timing bug, formatting touching migrations, docs checked against the data;
+  - how the AI's autonomy is kept in check.
+
+  CLAUDE.md now spells out the review-before-commit rules.
 
 ## Demo script (for the presentation)
 

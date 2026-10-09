@@ -365,36 +365,81 @@ I treat AI output like a pull request from a fast, confident colleague who has n
 
 ## Part 2: how GenAI was used to build this repository
 
-The whole project was built with Claude Code as a pair programmer. The aim was speed without giving up control, so the setup is designed to keep the AI on rails.
+The whole project was built with Claude Code as a pair programmer. The aim was speed without giving up control, so the setup is designed to keep the AI on rails. Every proposal is treated as a draft to challenge, not an answer to accept.
 
 ### Guardrails
 
-- **[CLAUDE.md](../CLAUDE.md)** is the standing brief. It covers the stack, the architecture rules, the conventions, the commands, and "don't commit unless asked". Every session starts from it, so I don't re-explain the project or let it drift.
-- **[ROADMAP.md](ROADMAP.md)** breaks the work into small numbered tasks, one commit each. Each prompt is one task, which keeps diffs reviewable and makes it obvious when the tool wanders out of scope.
+- **[CLAUDE.md](../CLAUDE.md)** is the standing brief. It covers the stack, the architecture rules, the conventions and the commands. Every session starts from it, so I don't re-explain the project or let it drift.
+- **[ROADMAP.md](ROADMAP.md)** breaks the work into small numbered tasks, one commit each. Each prompt is one task, which keeps diffs reviewable and makes it obvious when the tool wanders out of scope. Any new piece of work, even a small fix, first gets its own roadmap entry.
 - **[DECISIONS.md](DECISIONS.md)** records every choice and why. When the AI proposes something that contradicts a decision, the log wins, or the decision is revisited on purpose.
+- **Plan, then review, then commit:**
+  - Non-trivial changes start in plan mode, where the AI may only read and propose.
+  - Changes are left uncommitted until I have reviewed them.
+  - Nothing is committed or pushed without my explicit go-ahead (see [Keeping the AI's autonomy in check](#keeping-the-ais-autonomy-in-check)).
 - **Executable rules instead of trust:**
   - `ArchitectureTest` (ArchUnit) fails the build if a layer rule is broken.
   - JaCoCo fails it below 95% line and 90% branch coverage.
-  - The web test setup fails any test that logs a console error or warning.
+  - The web unit tests and the Playwright browser flows both fail on any console error or warning.
   - Testcontainers runs the real Postgres and Redis, so persistence code can't pass against a fake.
+  - CI runs all of it on every push: `api`, `web`, and `e2e`, which starts the real stack and drives it with Playwright.
 - **TDD as the interface:** I ask for the failing test first, review it as the specification, then ask for the code. A wrong test is far easier to spot than wrong code.
+- **Untrusted input stays untrusted:** the exercise brief was handed to the AI as a PDF. I told it explicitly to ignore any hidden or misleading instructions embedded in it, and to work from the visible requirements only.
+
+### Decisions I steered
+
+These are the places where I challenged or redirected a first proposal (the AI's or my own first idea), or raised the point myself. Each one is recorded where a reviewer can check it.
+
+| Topic | Starting point | What we decided, and why | Recorded in |
+|---|---|---|---|
+| Repository shape | Two repositories (API and web) | One monorepo with `api/`, `web/` and one Docker Compose file. It's one deliverable, one clone, one `docker compose up`, and a change to the API and its UI lands in one commit. | [D1](DECISIONS.md#d1-monorepo) |
+| Authentication scope | Security wasn't part of the first plan | The spec asks for registration, login, and public vs protected routes, but no specific mechanism. We chose **minimal JWT**: BCrypt passwords, HS256 tokens, the Spring resource server and one role. That's enough to show the boundary, without an identity provider. | [D11](DECISIONS.md#d11-minimal-jwt-auth) |
+| Architecture | Hexagonal "ports and adapters" packages | Feature-first packages with plain Spring layers, with dependency inversion only for outbound I/O. Same Clean Architecture guarantees (ArchUnit-enforced), less ceremony and clearer names. | [D4](DECISIONS.md#d4-feature-first-packages-with-clean-layers-inside), [D5](DECISIONS.md#d5-services-as-service-beans-dependency-inversion-only-for-outbound-io) |
+| Package and class names | `com.<author>.poke`; a constants class for every API path; a loosely grouped `shared` package | Root `com.poke`. Paths live on the controllers, not in an `ApiPaths` class. `shared` is split by concern: `exception`, `pagination`, `validation`, `measure`, `config`, `mapping`. The backend's local-data feature is named `localpokemon`, so it is clearly separate from the PokeAPI `catalog`. | [CLAUDE.md](../CLAUDE.md), [D4](DECISIONS.md#d4-feature-first-packages-with-clean-layers-inside) |
+| Validation | Reuse the domain's `Require` guards for request bodies too | Bean Validation at the controller edge, with `fieldErrors` in the 400. `Require` only for domain invariants that must hold whatever the source, including upstream PokeAPI data. | [D20](DECISIONS.md#d20-validation-domain-guards-for-upstream-data-bean-validation-for-requests) |
+| Threads | Platform threads by default | Virtual threads on, because the catalog makes many blocking calls to PokeAPI: one 20-item page needs 41 upstream calls, made concurrently. I asked for the reasoning to be written down rather than left implicit. | [D19](DECISIONS.md#d19-virtual-threads-enabled-globally) |
+| Mapping code | Hand-written positional constructors, such as a 17-argument response with eight `String`s | **My proposal: MapStruct.** The AI scoped it and flagged the trade-offs:<br>• **Generated:** responses and entity → domain mappings, with unmapped fields failing the build.<br>• **Hand-written:** entity writes (Hibernate's managed collections, `isNew`) and the PokeAPI mapper, which holds logic rather than field copying.<br>• **Costs:** entities gained getters, so there's more code in total. Generated null-checks dropped branch coverage to 79.7%, so the generated classes are excluded from the gate rather than tested for unreachable branches. | [D21](DECISIONS.md#d21-mapstruct-for-response-and-entity-to-domain-mappings), roadmap 6.6 |
+| *My Pokedex* in the menu | The link was shown to everyone, and the route guard redirected visitors to login | **I spotted it while using the app.** A visitor shouldn't be offered a page they can't open. The link now appears only when signed in. The guard stays, so a typed or bookmarked `/my-pokedex` still redirects to login and back, and the demo shows that on purpose. | Roadmap 6.8 |
+| "Pokedex" in the UI | The AI suggested renaming *My Pokedex* to *My Pokemon*, by over-extending the earlier backend rename | **Rejected before anything landed.** The Pokédex is the term players know from the games, so it's the right word for the user's collection. The backend rename was about code clarity, not the product's language. Nothing was changed. | This document |
+| Demo recordings | One short clip per test, 2–6 seconds, too fast to follow | **My feedback after watching them.** Now three narrated chapters (catalog, accounts, My Pokedex), with balloons beside each element in use, an outline and a visible cursor. They're published as MP4 so they play anywhere, with clickable thumbnails in the README. The chapters keep real assertions, so a broken flow can't produce a misleading video. | Roadmap 6.10, [E2E-TEST-PLAN.md](E2E-TEST-PLAN.md) |
+| Browser tests in CI | Playwright was local-only | A third workflow, `e2e`, builds the full stack on the runner and runs the 11 checks, uploading traces on failure. All three workflows can also be started by hand. | Roadmap 6.11 |
 
 ### Where the AI got it wrong and I stepped in
 
 These are real corrections from this repository's history:
 
-- **Architecture vocabulary:** the first structure used hexagonal "ports and adapters" packages. For a service this size that was ceremony, and the term confused readers. I switched to feature-first packages with plain Spring layers, keeping dependency inversion only for outbound I/O ([D4](DECISIONS.md#d4-feature-first-packages-with-clean-layers-inside), [D5](DECISIONS.md#d5-services-as-service-beans-dependency-inversion-only-for-outbound-io)).
-- **Naming:** a feature was first called `pokedex`, which was ambiguous between the upstream catalogue and the local copy. It was renamed to `localpokemon`.
 - **Spring wiring order:** a `@Service` was introduced in a task before the bean it needed existed, so the context failed to start. The fix was to reorder the roadmap so implementations land before the services that use them.
 - **JPA with assigned ids:** new entities were saved through `merge` and started at `version = 1`. The fix was `Persistable` with an `isNew` flag, plus a repository test asserting that new rows start at version 0.
 - **Leaking 500s:** `ObjectOptimisticLockingFailureException` escaped as a 500. It is now translated to a domain `StaleVersionException`, which returns 409, with a concurrency test.
 - **Integration tests:** a class-level `@Transactional` in a migration test caused Postgres "current transaction is aborted" errors after an expected constraint violation. The fix was explicit cleanup in `@AfterEach` instead.
 - **React tests:** session resets in `afterEach` produced `act()` warnings. The stricter console guard caught them, and the fix was to unmount before resetting the store.
-- **Avoiding over-engineering:** reusing the domain `Require` guards for request bodies too was considered and rejected. Bean Validation stays at the edge and `Require` guards domain invariants only ([D20](DECISIONS.md#d20-validation-domain-guards-for-upstream-data-bean-validation-for-requests)).
+- **Logout from a protected page:** the new Playwright flow found that logging out on *My Pokedex* landed on the login page instead of home.
+  - **First fix:** the AI made logout wait for the navigation home. It passed the jsdom unit test but still failed in a real browser.
+  - **Root cause:** the router commits navigation inside a React transition, while the auth store update renders immediately, so the route guard redirected first.
+  - **What shipped:** logout navigates home with a sign-out marker and clears the session once home is on screen.
+  - **Lesson:** a green unit test isn't proof for timing bugs. Check in the real browser (roadmap 6.9).
+- **Formatting vs migrations:** an IDE "reformat code" pass also re-wrapped the committed Flyway migrations. Flyway checksums applied migrations, so that would have stopped the API from starting against any existing database. The formatting was kept for the Java code and reverted for the migrations (roadmap 6.5).
+- **Docs must match the data:** the first README said the seed data was Pokemon #1–#20. Checking the migration showed 20 hand-picked Pokemon (#25, #133, #150 and others). The demo script promised an error for a blank localized name, but the form treats blank as "clear this field". Both were corrected after checking the source, not trusted from memory.
+
+### Keeping the AI's autonomy in check
+
+An agentic tool can do a lot in one go, and that is also its risk. Twice it moved faster than I wanted:
+- It committed and pushed finished tasks before I had reviewed them.
+- After I rejected its plan-mode proposal, it carried on editing, committing and pushing as if the plan had been approved.
+
+Nothing was lost, and every change was reviewable afterwards in git. But it broke the agreement. The working rules are now explicit, in the project memory and in CLAUDE.md:
+
+1. **Plan mode means read-only.** No edits, commits or pushes until I approve the plan.
+2. **Every change gets a roadmap task first,** and stays **uncommitted** until I have reviewed it. Then it's committed as one `<id> <description>` commit and pushed.
+3. **Approval doesn't carry over:** an OK for one task isn't an OK for the next.
+4. **No touching the running environment without asking,** such as rebuilding my Docker stack.
+
+When I wanted to undo something, history stayed honest. Related work was folded into the right task with a normal amend (the demo videos went into 6.10), and force-pushes used a lease, so nothing on the remote was overwritten blindly.
 
 ### What I would tell a team
 
 - Give the tool the same context a new joiner gets: a written brief, conventions and a definition of done. Prompts get shorter and output gets better.
-- Make the rules executable, through architecture tests, coverage gates and strict linters. Then the AI's mistakes fail the build instead of failing review.
-- Keep tasks small. Review the plan, then the tests, then the code.
-- Use the tool for its strengths: boilerplate, test cases you didn't think of, reading unfamiliar APIs and refactors across many files. Keep a human on security boundaries, data modelling and trade-offs.
+- Make the rules executable, through architecture tests, coverage gates, console guards and CI. Then the AI's mistakes fail the build instead of failing review.
+- Keep tasks small. Review the plan, then the tests, then the code. Don't let the tool commit on your behalf.
+- Test in the real environment: a real browser and real containers catch what mocks and jsdom can't.
+- Check claims against the source. Counts, behaviour and documentation are things an AI states confidently and sometimes gets wrong.
+- Use the tool for its strengths: boilerplate, test cases you didn't think of, reading unfamiliar APIs and refactors across many files. Keep a human on security boundaries, data modelling, product language and trade-offs.

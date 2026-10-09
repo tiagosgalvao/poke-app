@@ -118,6 +118,10 @@ Packages are **feature-first** (`com.poke.<feature>`), with the usual Spring lay
   - Prefer versions that have been released for at least 2 weeks.
   - For npm, use `npm install --before=<date two weeks ago>`.
   - Gradle versions are pinned in `api/build.gradle.kts`.
-- **Git:** do **not** commit or push unless explicitly asked. The user commits in parts. Staging is fine when asked.
+- **Git and review:**
+  - **Plan mode is read-only:** no edits, commits or pushes until the plan is approved.
+  - **Roadmap first:** every new piece of work, even a small fix, first gets a numbered task in `docs/ROADMAP.md`, which is ticked in the same commit.
+  - **Review before committing:** leave changes uncommitted, summarize them, and wait for the user's review. Commit, merge or push only when the user explicitly says so. An approval covers that task only.
+  - **Running environment:** don't rebuild or restart the user's running Docker stack without asking.
 - **Code style and best practices:** follow `docs/CONVENTIONS.md`. That means no redundant comments, no magic numbers or strings, static imports for constants and enums, enums in an `enums` package, and braces on every `if`.
 - **Commits:** follow `docs/CONVENTIONS.md`. That means one commit per roadmap task, with the message `<task id> <short description>`, e.g. `0.1 monorepo layout`.
