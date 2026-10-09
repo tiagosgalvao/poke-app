@@ -77,5 +77,6 @@ Re-record after any UI change, so the videos match the app.
 |---|---|---|
 | Playwright project, fixtures (console guard, API helper, sign-in, recording), smoke flows, this plan | 6.7 | Done |
 | Hide the *My Pokedex* link from visitors (app change before recording) | 6.8 | Done |
-| Catalog, auth and My Pokedex flows; recordings in `docs/demo/` | 6.9 | Next |
+| Fix: logging out on a protected page landed on login instead of home (found by `auth.spec.ts`) | 6.9 | Done |
+| Catalog, auth and My Pokedex flows; recordings in `docs/demo/` | 6.10 | Next |
 | Run the flows in CI against the compose stack | | To decide |

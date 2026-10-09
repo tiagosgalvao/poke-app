@@ -13,6 +13,7 @@ const routes = [
     path: '/private',
     element: (
       <RequireAuth>
+        <UserMenu />
         <p>private</p>
       </RequireAuth>
     ),
@@ -40,6 +41,16 @@ describe('UserMenu', () => {
     await userEvent.click(screen.getByRole('button', { name: /log out/i }))
 
     expect(useAuthStore.getState().token).toBeNull()
+    expect(screen.getByRole('link', { name: /log in/i })).toBeInTheDocument()
+  })
+
+  it('logging out from a protected page goes home, not to the login page', async () => {
+    useAuthStore.getState().login({ token: 'jwt', username: 'ash', expiresAt: new Date(Date.now() + 60_000).toISOString() })
+    const { router } = renderRoutes(routes, '/private')
+
+    await userEvent.click(screen.getByRole('button', { name: /log out/i }))
+
+    expect(router.state.location.pathname).toBe('/')
     expect(screen.getByRole('link', { name: /log in/i })).toBeInTheDocument()
   })
 
