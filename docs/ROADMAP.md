@@ -72,6 +72,7 @@ All Phase 3 code lives in `com.poke.identity`.
 - [x] **6.3 github actions ci**: an `api` job (Gradle build + tests + JaCoCo) and a `web` job (lint + test + build), filtered by path
 - [x] **6.4 fresh clone smoke test**: `docker compose up --build` from a clean clone, then the demo script below. `scripts/smoke-test.sh` automates the API side (24 checks through the nginx proxy: catalog, detail, 400/401/404/409 paths, sync, patch, import and delete). On a clean clone with no Docker cache, the stack was healthy in about 90 s and every check passed. A scripted browser walk through the demo found no console errors or warnings. The only console line was Chrome's own network log for the deliberate 409, which the browser prints for any failed HTTP response
 - [x] **6.5 code formatting**: an IDE formatting pass over the API sources and tests (single-tab continuation indent, grouped imports). The Flyway migrations are left as committed, because Flyway checksums them
+- [x] **6.6 mapstruct mappers**: MapStruct generates the controller responses and the entity → domain mappings, and unmapped fields fail the build. Entities get read-only getters. Entity writes and `PokeApiMapper` stay hand-written. Mapper unit tests compare whole records, and the generated classes are excluded from coverage (D21)
 
 ## Demo script (for the presentation)
 

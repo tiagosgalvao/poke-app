@@ -26,6 +26,7 @@ Architecture Decision Records (ADR-style) for the Poke App. Each decision has a 
 | [D18](#d18-dependencies-at-least-2-weeks-old) | Dependencies at least 2 weeks old | Supply chain | Accepted |
 | [D19](#d19-virtual-threads-enabled-globally) | Virtual threads enabled globally | Backend / perf | Accepted |
 | [D20](#d20-validation-domain-guards-for-upstream-data-bean-validation-for-requests) | Validation: domain guards for upstream data, Bean Validation for requests | Backend | Accepted (reassess in Phase 2) |
+| [D21](#d21-mapstruct-for-response-and-entity-to-domain-mappings) | MapStruct for response and entity → domain mappings | Backend | Accepted |
 
 ---
 
@@ -306,3 +307,25 @@ Architecture Decision Records (ADR-style) for the Poke App. Each decision has a 
   - Request bodies (`ImportRequest`, `ProprietaryUpdateRequest`, `ProprietaryPatchRequest`, `SyncRequest`) use Bean Validation: `@NotBlank`, `@Size`, `@Pattern`, `@NotNull`/`@PositiveOrZero` on `version`. `GlobalExceptionHandler` reports the violations as 400 with a `fieldErrors` extension.
   - The `localpokemon` domain keeps only the rules that must hold whichever way data arrives (API or sync): at most 10 normalized tags, 1–50 distinct positive ids per sync batch, and the version check. The DTO limits mirror the domain constants (`ProprietaryData.MAX_TAGS`, `SyncBatch.MAX_IDS`), so the two never drift.
   - Questions 2 (`page`/`size` annotations) and 3 (upstream mapping failures → 503) stay open. Neither blocks anything.
+
+### D21. MapStruct for response and entity → domain mappings
+
+- **Status:** Accepted (task 6.6).
+- **Context:**
+  - Controllers turned domain objects into response records, and repositories turned entities into domain records, with hand-written positional constructor calls. `LocalPokemonResponse` alone has 17 arguments, 8 of them `String`.
+  - Swapping two arguments of the same type still compiles. The tests only catch it for the fields they happen to assert.
+- **Decision:** MapStruct `1.6.3` generates these mappings, matching fields by name:
+  - **Controller responses:** `PokemonResponseMapper`, `LocalPokemonResponseMapper`, `AuthResponseMapper`.
+  - **Entity → domain:** `UserEntityMapper`, `LocalPokemonEntityMapper`.
+  - **Shared setup:** `shared.mapping.MappingConfig` sets Spring components, constructor injection and **`unmappedTargetPolicy = ERROR`**, so a new or renamed field without a source fails the build. `MeasureMappings` holds the named unit conversions (`kilograms`, `metres`).
+  - Mappers live in the `controller` and `entity` packages. The domain stays framework-free, and `ArchitectureTest` is unchanged.
+- **Kept hand-written, on purpose:**
+  - **Entity writes** (`UserEntity.from`, `LocalPokemonEntity.copyFrom`). They set the `isNew` flag for assigned ids and update Hibernate's managed collections in place, so tags, types and abilities keep their identity under `@Version`. Generated setters would replace those collections and need public setters on the entities.
+  - **`PokeApiMapper`.** It holds logic, not field copying: it orders types by slot, picks the English genus and latest flavor text, and falls back from artwork to sprite.
+- **Consequences:**
+  - Entities gained read-only getters, which MapStruct needs to read them. They still have no setters.
+  - The generated `*MapperImpl` classes are excluded from the JaCoCo report and gate. Their defensive `null` branches are never reached by real data, and their correctness comes from the compile-time check plus the mapper, controller and repository tests.
+- **Alternatives considered:**
+  - **Keep hand-written constructors:** no dependency, but no compile-time check that each field lands in the right place.
+  - **ModelMapper or another reflection-based mapper:** it fails at runtime instead of at compile time, and is slower.
+

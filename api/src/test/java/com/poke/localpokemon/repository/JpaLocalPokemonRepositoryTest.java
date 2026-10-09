@@ -4,6 +4,7 @@ import com.poke.TestcontainersConfiguration;
 import com.poke.localpokemon.domain.LocalPokemon;
 import com.poke.localpokemon.domain.ProprietaryData;
 import com.poke.localpokemon.domain.UpstreamData;
+import com.poke.localpokemon.entity.LocalPokemonEntityMapperImpl;
 import com.poke.shared.pagination.PageRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,7 +23,7 @@ import static org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTest
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = NONE)
-@Import({TestcontainersConfiguration.class, JpaLocalPokemonRepository.class})
+@Import({TestcontainersConfiguration.class, JpaLocalPokemonRepository.class, LocalPokemonEntityMapperImpl.class})
 class JpaLocalPokemonRepositoryTest {
 
 	@Autowired

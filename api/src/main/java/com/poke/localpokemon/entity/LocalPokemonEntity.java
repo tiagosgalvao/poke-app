@@ -1,8 +1,6 @@
 package com.poke.localpokemon.entity;
 
 import com.poke.localpokemon.domain.LocalPokemon;
-import com.poke.localpokemon.domain.ProprietaryData;
-import com.poke.localpokemon.domain.UpstreamData;
 import jakarta.persistence.*;
 import org.hibernate.annotations.BatchSize;
 import org.springframework.data.domain.Persistable;
@@ -77,6 +75,70 @@ public class LocalPokemonEntity implements Persistable<Integer> {
 		return id;
 	}
 
+	public String getName() {
+		return name;
+	}
+
+	public String getSpriteUrl() {
+		return spriteUrl;
+	}
+
+	public String getImageUrl() {
+		return imageUrl;
+	}
+
+	public String getCategory() {
+		return category;
+	}
+
+	public int getWeightHectograms() {
+		return weightHectograms;
+	}
+
+	public int getHeightDecimetres() {
+		return heightDecimetres;
+	}
+
+	public List<String> getTypes() {
+		return types;
+	}
+
+	public List<String> getAbilities() {
+		return abilities;
+	}
+
+	public String getLocalizedName() {
+		return localizedName;
+	}
+
+	public String getRegion() {
+		return region;
+	}
+
+	public String getHabitat() {
+		return habitat;
+	}
+
+	public Set<String> getTags() {
+		return tags;
+	}
+
+	public String getNotes() {
+		return notes;
+	}
+
+	public long getVersion() {
+		return version;
+	}
+
+	public Instant getSyncedAt() {
+		return syncedAt;
+	}
+
+	public Instant getUpdatedAt() {
+		return updatedAt;
+	}
+
 	@Override
 	public boolean isNew() {
 		return isNew;
@@ -109,16 +171,6 @@ public class LocalPokemonEntity implements Persistable<Integer> {
 
 		syncedAt = pokemon.syncedAt();
 		updatedAt = pokemon.updatedAt();
-	}
-
-	public LocalPokemon toDomain() {
-		return new LocalPokemon(
-			id,
-			new UpstreamData(name, spriteUrl, imageUrl, category, weightHectograms, heightDecimetres, types, abilities),
-			new ProprietaryData(localizedName, region, habitat, tags, notes),
-			version,
-			syncedAt,
-			updatedAt);
 	}
 
 	private static void replace(List<String> target, List<String> values) {

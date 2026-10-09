@@ -53,13 +53,14 @@ npm run build                # tsc -b + vite build
 
 Packages are **feature-first** (`com.poke.<feature>`), with the usual Spring layers inside each feature. See `docs/ARCHITECTURE.md` §4 and D4.
 
-- **Features:** `catalog` (US01–US02, PokeAPI), `localpokemon` (US03–US04, Postgres), `identity` (users and auth), plus a `shared` kernel (`shared.exception`, `shared.pagination`, `shared.validation`, `shared.measure`, `shared.config`).
+- **Features:** `catalog` (US01–US02, PokeAPI), `localpokemon` (US03–US04, Postgres), `identity` (users and auth), plus a `shared` kernel (`shared.exception`, `shared.pagination`, `shared.validation`, `shared.measure`, `shared.mapping`, `shared.config`).
 - **`<feature>.domain`** is pure Java: no Spring, JPA, Jackson or servlet imports. It holds business types, invariants, domain exceptions, and the interfaces the feature needs from outside (e.g. `PokemonCatalog`, later `LocalPokemonRepository`).
 - **`<feature>.service`** holds `@Service` classes (and `@Transactional` from Phase 2). They depend on `domain` only, never on `controller`, `client`, `repository` or `entity`.
 - **`<feature>.client`** holds outbound HTTP (RestClient, DTOs, mapping, `@Cacheable`) and implements domain interfaces.
 - **`<feature>.repository` / `<feature>.entity`** hold Spring Data JPA repositories and `@Entity` classes, mapped to and from domain objects, and implement domain interfaces.
 - **`<feature>.security`** holds security infrastructure such as password hashing and token issuing (e.g. `identity.security`). It implements domain interfaces and follows the same rules as `client` and `repository`.
 - **`<feature>.controller`** holds REST controllers and request/response records. Controllers call services only, with no logic and no `client`, `repository` or `entity` imports.
+- **Mappings** that copy fields (domain → response, entity → domain) are MapStruct interfaces using `shared.mapping.MappingConfig`, in the `controller` or `entity` package (D21). Entity writes and `PokeApiMapper` stay hand-written.
 - **Enums** go in an `enums` package inside the feature or layer that owns them (e.g. `catalog.client.enums`).
 - **`shared`** depends on no feature. Features never form dependency cycles, and they talk to each other only through `service` classes.
 - **Dependency inversion is for outbound I/O only.** No inbound use-case interfaces.

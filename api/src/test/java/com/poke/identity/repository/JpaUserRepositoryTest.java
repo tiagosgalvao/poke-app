@@ -2,6 +2,7 @@ package com.poke.identity.repository;
 
 import com.poke.TestcontainersConfiguration;
 import com.poke.identity.domain.User;
+import com.poke.identity.entity.UserEntityMapperImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -16,7 +17,7 @@ import static org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTest
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = NONE)
-@Import({TestcontainersConfiguration.class, JpaUserRepository.class})
+@Import({TestcontainersConfiguration.class, JpaUserRepository.class, UserEntityMapperImpl.class})
 class JpaUserRepositoryTest {
 
 	private static final Instant REGISTERED_AT = Instant.parse("2026-10-08T10:00:00Z");

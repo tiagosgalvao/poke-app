@@ -22,6 +22,7 @@ repositories {
 val springdocVersion = "3.1.1"
 val archunitVersion = "1.5.0"
 val wiremockVersion = "3.13.2"
+val mapstructVersion = "1.6.3"
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -36,8 +37,10 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-webmvc")
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocVersion")
 	implementation("org.flywaydb:flyway-database-postgresql")
+	implementation("org.mapstruct:mapstruct:$mapstructVersion")
 	runtimeOnly("org.postgresql:postgresql")
 	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+	annotationProcessor("org.mapstruct:mapstruct-processor:$mapstructVersion")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-actuator-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-cache-test")
@@ -69,15 +72,17 @@ tasks.withType<Test> {
 	finalizedBy(tasks.jacocoTestReport)
 }
 
+val coverageExclusions = listOf("com/poke/PokeApiApplication.class", "**/*MapperImpl.class")
+
 tasks.jacocoTestReport {
 	dependsOn(tasks.test)
+	classDirectories.setFrom(files(classDirectories.files.map { fileTree(it) { exclude(coverageExclusions) } }))
 	reports {
 		xml.required = true
 		html.required = true
 	}
 }
 
-val coverageExclusions = listOf("com/poke/PokeApiApplication.class")
 val minimumLineCoverage = "0.95".toBigDecimal()
 val minimumBranchCoverage = "0.90".toBigDecimal()
 

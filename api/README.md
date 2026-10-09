@@ -53,6 +53,7 @@ com.poke
 │   ├── exception/      DomainException hierarchy; handler/GlobalExceptionHandler
 │   ├── pagination/     Page, PageRequest, PageResponse
 │   ├── measure/        Measures (unit conversion)
+│   ├── mapping/        MappingConfig, MeasureMappings (MapStruct setup)
 │   ├── validation/     Require
 │   └── config/         SecurityConfig
 ├── catalog/            US01–US02
@@ -86,6 +87,7 @@ Versions are managed by the Spring Boot BOM (Boot **4.1.1**) unless pinned in `b
 | **spring-boot-starter-security-oauth2-resource-server** | Validates `Authorization: Bearer <JWT>` tokens (HS256 signature and expiry) with Spring's built-in support, so there's no hand-written JWT filter. It also brings Nimbus JOSE, which is used to *issue* tokens at login. |
 | **spring-boot-starter-actuator** | `/actuator/health` (with liveness and readiness probes), used by the Docker healthcheck. Only `health` and `info` are exposed. |
 | **springdoc-openapi-starter-webmvc-ui** `3.1.1` | Generates the OpenAPI spec from the controllers and serves **Swagger UI** at `/swagger-ui.html`, which is used for the demo and for manual testing. |
+| **mapstruct** + **mapstruct-processor** `1.6.3` (annotation processor) | Generates the domain → response and entity → domain mappings at compile time. Fields are matched by name, and an unmapped target fails the build (`MappingConfig`), so mixing up two `String` arguments can no longer compile silently. See [D21](../docs/DECISIONS.md#d21-mapstruct-for-response-and-entity-to-domain-mappings). |
 | **spring-boot-configuration-processor** (annotation processor) | Generates metadata for the `poke.*` properties, so the IDE autocompletes and validates them in `application.yml`. |
 
 ### Test

@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(LocalPokemonController.class)
-@Import({GlobalExceptionHandler.class, SecurityConfig.class})
+@Import({GlobalExceptionHandler.class, SecurityConfig.class, LocalPokemonResponseMapperImpl.class})
 class LocalPokemonControllerTest {
 
 	private static final String LOCAL_POKEMON = "/api/v1/local-pokemon";

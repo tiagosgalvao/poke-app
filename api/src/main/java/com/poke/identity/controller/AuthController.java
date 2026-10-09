@@ -15,19 +15,21 @@ import static org.springframework.http.HttpStatus.CREATED;
 class AuthController {
 
 	private final AuthService authService;
+	private final AuthResponseMapper mapper;
 
-	AuthController(AuthService authService) {
+	AuthController(AuthService authService, AuthResponseMapper mapper) {
 		this.authService = authService;
+		this.mapper = mapper;
 	}
 
 	@PostMapping("/register")
 	@ResponseStatus(CREATED)
 	UserResponse register(@Valid @RequestBody RegisterRequest request) {
-		return UserResponse.from(authService.register(request.username(), request.email(), request.rawPassword()));
+		return mapper.toUserResponse(authService.register(request.username(), request.email(), request.rawPassword()));
 	}
 
 	@PostMapping("/login")
 	TokenResponse login(@Valid @RequestBody LoginRequest request) {
-		return TokenResponse.from(authService.login(request.username(), request.rawPassword()));
+		return mapper.toTokenResponse(authService.login(request.username(), request.rawPassword()));
 	}
 }

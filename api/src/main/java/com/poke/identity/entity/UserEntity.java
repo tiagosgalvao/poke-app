@@ -36,13 +36,25 @@ public class UserEntity implements Persistable<UUID> {
 		return entity;
 	}
 
-	public User toDomain() {
-		return new User(id, username, email, passwordHash, createdAt);
-	}
-
 	@Override
 	public UUID getId() {
 		return id;
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public String getPasswordHash() {
+		return passwordHash;
+	}
+
+	public Instant getCreatedAt() {
+		return createdAt;
 	}
 
 	@Override

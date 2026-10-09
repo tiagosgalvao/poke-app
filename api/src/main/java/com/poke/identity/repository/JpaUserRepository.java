@@ -3,6 +3,7 @@ package com.poke.identity.repository;
 import com.poke.identity.domain.User;
 import com.poke.identity.domain.UserRepository;
 import com.poke.identity.entity.UserEntity;
+import com.poke.identity.entity.UserEntityMapper;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,14 +14,16 @@ import java.util.Optional;
 public class JpaUserRepository implements UserRepository {
 
 	private final UserJpaRepository jpa;
+	private final UserEntityMapper mapper;
 
-	public JpaUserRepository(UserJpaRepository jpa) {
+	public JpaUserRepository(UserJpaRepository jpa, UserEntityMapper mapper) {
 		this.jpa = jpa;
+		this.mapper = mapper;
 	}
 
 	@Override
 	public Optional<User> findByUsername(String username) {
-		return jpa.findByUsername(username).map(UserEntity::toDomain);
+		return jpa.findByUsername(username).map(mapper::toDomain);
 	}
 
 	@Override
@@ -36,6 +39,6 @@ public class JpaUserRepository implements UserRepository {
 	@Override
 	@Transactional
 	public User save(User user) {
-		return jpa.saveAndFlush(UserEntity.from(user)).toDomain();
+		return mapper.toDomain(jpa.saveAndFlush(UserEntity.from(user)));
 	}
 }
