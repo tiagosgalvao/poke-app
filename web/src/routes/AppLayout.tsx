@@ -1,10 +1,13 @@
 import { NavLink, Outlet } from 'react-router'
+import { isAuthenticated, useAuthStore } from '../features/auth/authStore'
 import { UserMenu } from '../features/auth/UserMenu'
 
 const navLink = ({ isActive }: { isActive: boolean }) =>
   `rounded-md px-3 py-2 text-sm font-medium ${isActive ? 'bg-sky-50 text-sky-700' : 'text-slate-600 hover:text-slate-900'}`
 
 export function AppLayout() {
+  const authenticated = useAuthStore(isAuthenticated)
+
   return (
     <div className="min-h-dvh bg-slate-50 text-slate-900">
       <header className="border-b border-slate-200 bg-white">
@@ -15,9 +18,11 @@ export function AppLayout() {
               <NavLink to="/" end className={navLink}>
                 Catalog
               </NavLink>
-              <NavLink to="/my-pokedex" className={navLink}>
-                My Pokedex
-              </NavLink>
+              {authenticated && (
+                <NavLink to="/my-pokedex" className={navLink}>
+                  My Pokedex
+                </NavLink>
+              )}
             </nav>
           </div>
           <UserMenu />

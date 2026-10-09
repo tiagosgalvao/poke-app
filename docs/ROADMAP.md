@@ -79,14 +79,15 @@ All Phase 3 code lives in `com.poke.identity`.
   - demo mode, which shows the browser, slows each step and records every test into `docs/demo/`.
 
   Also smoke flows, and the plan in `docs/E2E-TEST-PLAN.md`.
-- [ ] **6.8 demo flows and recordings**: catalog, auth and My Pokedex flows as in the test plan, with recordings committed under `docs/demo/`
+- [x] **6.8 hide my pokedex when logged out**: the *My Pokedex* nav link only shows for a signed-in user, and disappears on logout. The route guard is unchanged, so a typed or bookmarked `/my-pokedex` still redirects to login
+- [ ] **6.9 demo flows and recordings**: catalog, auth and My Pokedex flows as in the test plan, with recordings committed under `docs/demo/`
 
 ## Demo script (for the presentation)
 
 1. `docker compose up --build`, then open http://localhost:3000.
 2. Browse pages 1 and 2. Reload page 1 and point out that it is now faster because it comes from Redis (`docker compose exec redis redis-cli KEYS '*'`).
 3. Open Eevee to show the branching evolution chain, then Pikachu to show stats and description.
-4. Try *My Pokedex* while logged out, which redirects to login. Log in as `ash / Pikachu123!`.
+4. While logged out, the header only shows *Catalog*. Open http://localhost:3000/my-pokedex directly, which redirects to login. Log in as `ash / Pikachu123!`: you land back on *My Pokedex*, and the link now shows in the header.
 5. Sync ids 1–10 and show the created/refreshed summary.
 6. Edit Bulbasaur: set the localized name, region and tags. Show the inline error for an invalid tag (`not a tag!`), then save. A blank field clears that value.
 7. Trigger a 409 by editing in two tabs. Delete a record.

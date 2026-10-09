@@ -21,9 +21,9 @@ None of them run the real browser against the real stack. These flows cover what
 
 | Spec | Story | Flow | What it checks |
 |---|---|---|---|
-| `smoke.spec.ts` | | The catalog loads; a protected page redirects to login | The stack is up and the proxy and routing work. Runs first. |
+| `smoke.spec.ts` | | The catalog loads with no *My Pokedex* link for a visitor; a protected page redirects to login | The stack is up and the proxy and routing work. Runs first. |
 | `catalog.spec.ts` | US01, US02 | Browse page 1 → page 2 (`?page=2`), then open Eevee | Cards show sprite, category, weight and abilities. The detail page shows artwork, six stat bars, the description and the branching evolution chain. Clicking an evolution opens it. |
-| `auth.spec.ts` | Users | Visit *My Pokedex* logged out → login as `ash` → back on *My Pokedex*; register a new user; log out | Public vs protected routes, the redirect to login and back, register-then-login, and the header showing the user |
+| `auth.spec.ts` | Users | Open `/my-pokedex` logged out → login as `ash` → back on *My Pokedex*, with the link now in the header; register a new user; log out, and the link disappears | Public vs protected routes, the redirect to login and back, register-then-login, and the header showing the user |
 | `pokedex.spec.ts` | US03 | Sync ids `1, 4, 7`; add Ditto from its detail page | The sync summary appears and the list updates. "Add to My Pokedex" creates the record, and a second add is refused. |
 | `pokedex.spec.ts` | US04 | Edit Bulbasaur: invalid tag → inline error; valid tags and localized name → saved | Client-side validation, save, and the list showing the new data |
 | `pokedex.spec.ts` | US04 | Stale edit: the record changes underneath an open form, then save | A 409 is shown with "Reload latest", and reloading recovers |
@@ -76,5 +76,6 @@ Re-record after any UI change, so the videos match the app.
 | Step | Task | State |
 |---|---|---|
 | Playwright project, fixtures (console guard, API helper, sign-in, recording), smoke flows, this plan | 6.7 | Done |
-| Catalog, auth and My Pokedex flows; recordings in `docs/demo/` | 6.8 | Next |
+| Hide the *My Pokedex* link from visitors (app change before recording) | 6.8 | Done |
+| Catalog, auth and My Pokedex flows; recordings in `docs/demo/` | 6.9 | Next |
 | Run the flows in CI against the compose stack | | To decide |
